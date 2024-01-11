@@ -29,7 +29,6 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 
 void AZDPlayerCharacterBase::BeginPlay()
 {
-	Super::BeginPlay();
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -73,8 +72,9 @@ void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.X);
-		//AddMovementInput(RightDirection, MovementVector.X);
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
+		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, Value.ToString());
 	}
 }
 
