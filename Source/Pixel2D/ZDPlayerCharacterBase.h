@@ -38,6 +38,8 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 public:
 	AZDPlayerCharacterBase();
 
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
 protected:
 
@@ -51,5 +53,8 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void UpdateControllerRotation();
 
 };

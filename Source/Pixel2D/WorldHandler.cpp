@@ -91,7 +91,7 @@ void AWorldHandler::LoadChunks()
 		{
 			for (int32 y = -2; y < 2; y++)
 			{
-				chunkLocation.Set(i * ChunkSize * 16 / 2, 1, y * ChunkSize * 16 / 2);
+				chunkLocation.Set(i * ChunkSize * 16, 1, y * ChunkSize * 16);
 				TileMapComponent[idx]->SetRelativeLocation(chunkLocation);
 				idx++;
 			}
@@ -112,7 +112,7 @@ void AWorldHandler::LoadChunks()
 				}
 				else
 				{
-					LocalTileInfo.PackedTileIndex = 53; //FMath::RandRange(0, 624);
+					LocalTileInfo.PackedTileIndex = FMath::RandRange(0, 624);
 				}
 
 				TileMapComponent[i]->SetTile(x, y, 0, LocalTileInfo);
@@ -132,53 +132,56 @@ void AWorldHandler::RefreshChunks(int direction)
 
 	}
 
-	//chunkLocation.Set(-(ChunkSize * 16) * 2.5, 1, (ChunkSize * 16) * 2.5);
-	//TileMapComponent[0]->SetRelativeLocation(chunkLocation);
+	//old refresh
+	/*
+	chunkLocation.Set(-(ChunkSize * 16) * 2.5, 1, (ChunkSize * 16) * 2.5);
+	TileMapComponent[0]->SetRelativeLocation(chunkLocation);
 
-	//chunkLocation.Set(-(ChunkSize * 16) / 2, 1, (ChunkSize * 16) * 2.5);
-	//TileMapComponent[1]->SetRelativeLocation(chunkLocation);
+	chunkLocation.Set(-(ChunkSize * 16) / 2, 1, (ChunkSize * 16) * 2.5);
+	TileMapComponent[1]->SetRelativeLocation(chunkLocation);
 
-	//chunkLocation.Set((ChunkSize * 16) * 2.5, 1, (ChunkSize * 16) * 2.5);
-	//TileMapComponent[2]->SetRelativeLocation(chunkLocation);
+	chunkLocation.Set((ChunkSize * 16) * 2.5, 1, (ChunkSize * 16) * 2.5);
+	TileMapComponent[2]->SetRelativeLocation(chunkLocation);
 
-	//chunkLocation.Set(-(ChunkSize * 16) * 2.5, 1, (ChunkSize * 16) / 2);
-	//TileMapComponent[3]->SetRelativeLocation(chunkLocation);
+	chunkLocation.Set(-(ChunkSize * 16) * 2.5, 1, (ChunkSize * 16) / 2);
+	TileMapComponent[3]->SetRelativeLocation(chunkLocation);
 
-	//chunkLocation.Set(-(ChunkSize * 16) / 2, 1, (ChunkSize * 16) / 2);
-	//TileMapComponent[4]->SetRelativeLocation(chunkLocation);
+	chunkLocation.Set(-(ChunkSize * 16) / 2, 1, (ChunkSize * 16) / 2);
+	TileMapComponent[4]->SetRelativeLocation(chunkLocation);
 
-	//chunkLocation.Set((ChunkSize * 16) * 2.5, 1, (ChunkSize * 16) / 2);
-	//TileMapComponent[5]->SetRelativeLocation(chunkLocation);
+	chunkLocation.Set((ChunkSize * 16) * 2.5, 1, (ChunkSize * 16) / 2);
+	TileMapComponent[5]->SetRelativeLocation(chunkLocation);
 
-	//chunkLocation.Set(-(ChunkSize * 16) * 2.5, 1, -(ChunkSize * 16) * 2.5);
-	//TileMapComponent[6]->SetRelativeLocation(chunkLocation);
+	chunkLocation.Set(-(ChunkSize * 16) * 2.5, 1, -(ChunkSize * 16) * 2.5);
+	TileMapComponent[6]->SetRelativeLocation(chunkLocation);
 
-	//chunkLocation.Set(-(ChunkSize * 16) / 2, 1, -(ChunkSize * 16) * 2.5);
-	//TileMapComponent[7]->SetRelativeLocation(chunkLocation);
+	chunkLocation.Set(-(ChunkSize * 16) / 2, 1, -(ChunkSize * 16) * 2.5);
+	TileMapComponent[7]->SetRelativeLocation(chunkLocation);
 
-	//chunkLocation.Set((ChunkSize * 16) * 2.5, 1, -(ChunkSize * 16) * 2.5);
-	//TileMapComponent[8]->SetRelativeLocation(chunkLocation);
+	chunkLocation.Set((ChunkSize * 16) * 2.5, 1, -(ChunkSize * 16) * 2.5);
+	TileMapComponent[8]->SetRelativeLocation(chunkLocation);
 
-	//for (int32 i = 0; i < 9; i++)
-	//{
-	//	for (int32 y = 0; y < ChunkSize; y++)
-	//	{
-	//		for (int32 x = 0; x < ChunkSize; x++)
-	//		{
-	//			FPaperTileInfo LocalTileInfo;
-	//			LocalTileInfo.TileSet = TileSet1;
-	//			if (i > 5) {
-	//				LocalTileInfo.PackedTileIndex = 53;
-	//			}
-	//			else
-	//			{
-	//				LocalTileInfo.PackedTileIndex = 454; // FMath::RandRange(0, 200);
-	//			}
+	for (int32 i = 0; i < 9; i++)
+	{
+		for (int32 y = 0; y < ChunkSize; y++)
+		{
+			for (int32 x = 0; x < ChunkSize; x++)
+			{
+				FPaperTileInfo LocalTileInfo;
+				LocalTileInfo.TileSet = TileSet1;
+				if (i > 5) {
+					LocalTileInfo.PackedTileIndex = 53;
+				}
+				else
+				{
+					LocalTileInfo.PackedTileIndex = 454; // FMath::RandRange(0, 200);
+				}
 
-	//			TileMapComponent[i]->SetTile(x, y, 0, LocalTileInfo);
-	//		}
-	//	}
-	//}
+				TileMapComponent[i]->SetTile(x, y, 0, LocalTileInfo);
+			}
+		}
+	}
+	*/
 }
 
 void AWorldHandler::RemoveBlockByIndex(int32 index)

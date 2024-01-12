@@ -6,7 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-//#include "GameFramework/Controller.h"
+#include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -19,12 +19,27 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance
+	CameraBoom->bDoCollisionTest = false; // turn off the camera zoom if object between the player and the camera
+
+	CameraBoom->bUsePawnControlRotation = false; //set world rotation to the arm instead of relative
+	CameraBoom->bInheritPitch = false;
+	CameraBoom->bInheritYaw = false;
+	CameraBoom->bInheritRoll = false;
+
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+}
+
+void AZDPlayerCharacterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	float velocity = GetCharacterMovement()->Velocity.X;
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));
 }
 
 void AZDPlayerCharacterBase::BeginPlay()
@@ -38,6 +53,8 @@ void AZDPlayerCharacterBase::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	GetCharacterMovement()->MaxWalkSpeed = 300.0;
 }
 
 void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -75,9 +92,31 @@ void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.X);
 		//AddMovementInput(RightDirection, MovementVector.X);
+
+		//update the controller rotation
+		UpdateControllerRotation();
 	}
 }
 
 void AZDPlayerCharacterBase::Look(const FInputActionValue& Value)
 {
+
+}
+
+void AZDPlayerCharacterBase::UpdateControllerRotation()
+{
+	float velocity = GetCharacterMovement()->Velocity.X;
+	if (velocity > 0)
+	{
+		// Set the control rotation of the player controller to the desired rotation
+		//Controller->SetControlRotation(FRotator(0.0, 0.0, 0.0));
+		//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, velocity.ToString());
+	}
+	else if (velocity < 0)
+	{
+		// Set the control rotation of the player controller to the desired rotation
+		//Controller->SetControlRotation(FRotator(0.0, 180.0, 180.0));
+	}
+
+	
 }
