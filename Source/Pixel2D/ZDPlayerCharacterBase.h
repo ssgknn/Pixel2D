@@ -55,6 +55,6 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void UpdateControllerRotation();
+	void UpdateCapsuleRotation(float XValue);
 
 };

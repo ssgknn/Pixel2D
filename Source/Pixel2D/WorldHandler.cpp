@@ -42,6 +42,7 @@ void AWorldHandler::BeginPlay()
 
 	//PlayerCharacter reference
 	CharacterRef = Cast<AZDPlayerCharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("WorldHandler"));
 
 	LoadChunks();
 }
