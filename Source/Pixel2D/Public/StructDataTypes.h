@@ -3,13 +3,28 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
+#include "StructDataTypes.generated.h"
 
 /**
  * 
  */
-class PIXEL2D_API StructDataTypes
+UCLASS()
+class PIXEL2D_API UStructDataTypes : public UObject
 {
-public:
-	StructDataTypes();
-	~StructDataTypes();
+	GENERATED_BODY()
+	
+};
+
+/**
+*	Sector element - X coordinate
+*/
+USTRUCT(BlueprintType)
+struct PIXEL2D_API FSectorX
+{
+	GENERATED_USTRUCT_BODY()
+
+	/*UPROPERTY(BlueprintReadWrite, Category = "SectorX")
+	TArray<FVoxel> Voxels;*/
+
 };

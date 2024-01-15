@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PaperTileMapComponent.h"
 #include "WorldHandler.generated.h"
 
 UCLASS()
@@ -16,40 +15,60 @@ public:
 	// Sets default values for this actor's properties
 	AWorldHandler();
 
-protected:
+private:
+	
+#pragma region DataVariables
+	UPROPERTY()
+	int ChunkElementCount;
 
 	UPROPERTY()
 	int ChunkSize;
-	
-	UPROPERTY()
-	FVector CharacterPosition;
-
-	//Chunk refresh bounsary limits
-	UPROPERTY()
-	double Boundary_L;
 
 	UPROPERTY()
-	double Boundary_R;
+	double ChunkSizeHalf;
 
 	UPROPERTY()
-	double Boundary_U;
+	int BlockSize;
 
 	UPROPERTY()
-	double Boundary_D;
+	TArray<int> ChunkList_Top;
+	UPROPERTY()
+	TArray<int> ChunkList_Bottom;
+	UPROPERTY()
+	TArray<int> ChunkList_Left;
+	UPROPERTY()
+	TArray<int> ChunkList_Right;
+	UPROPERTY()
+	int ChunkList_Center;
+
+
+	UPROPERTY()
+	int ChunksCount;
+
+	//ChunksCenter
+	FVector ChunksCenter;
+
+	//character position
+	UPROPERTY()
+	FVector PlayerPosition;
+
+#pragma endregion DataVariables
 		
 
+protected:
+
 	UPROPERTY()
-	TArray<UPaperTileMapComponent*> TileMapComponent;
+	TArray<class UTextRenderComponent*> TextComponent;
+
+	UPROPERTY()
+	TArray<class UPaperTileMapComponent*> TileMapComponent;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tilesets")
-	UPaperTileSet* TileSet1;
+	class UPaperTileSet* TileSet1;
 
 	UPROPERTY()
 	class AZDPlayerCharacterBase* CharacterRef;
-
-private:
-	static FName TileSetName1;
 
 protected:
 	// Called when the game starts or when spawned
@@ -64,6 +83,9 @@ public:
 
 	UFUNCTION()
 	void RefreshChunks(int direction);
+
+	UFUNCTION()
+	void CheckChunkBoundary();
 
 	UFUNCTION()
 	void RemoveBlockByIndex(int32 index);

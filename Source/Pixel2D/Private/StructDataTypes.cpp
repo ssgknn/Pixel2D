@@ -3,10 +3,3 @@
 
 #include "StructDataTypes.h"
 
-StructDataTypes::StructDataTypes()
-{
-}
-
-StructDataTypes::~StructDataTypes()
-{
-}
