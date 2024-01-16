@@ -6,6 +6,10 @@
 #include "Components/TextRenderComponent.h"
 #include "PaperTileMapComponent.h"
 #include "ZDPlayerCharacterBase.h"
+#include "ChunkActor.h"
+#include <Kismet/KismetMathLibrary.h>
+
+
 
 // Sets default values
 AWorldHandler::AWorldHandler()
@@ -13,14 +17,10 @@ AWorldHandler::AWorldHandler()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	//Chunks size
-	ChunkElementCount = 64;
-	ChunkSize = ChunkElementCount * BlockSize;
-	ChunkSizeHalf = ChunkSize / 2;
-	ChunksCount = 25;
+	
 
 	// Initialize TileMapComponents (chunks)
-	TileMapComponent.SetNum(ChunksCount);
+	/*TileMapComponent.SetNum(ChunksCount);
 	TextComponent.SetNum(ChunksCount);
 	for (int32 i = 0; i < ChunksCount; ++i)
 	{
@@ -28,7 +28,7 @@ AWorldHandler::AWorldHandler()
 		TextComponent[i] = CreateDefaultSubobject<UTextRenderComponent>(FName("TextComponent_" + FString::FromInt(i)));
 	}
 
-	this->SetActorLocation(FVector( - (ChunkSizeHalf), 1, ChunkSizeHalf));
+	this->SetActorLocation(FVector( - (ChunkSizeHalf), 1, ChunkSizeHalf));*/
 
 	PlayerPosition = FVector(0.0, 100.0, 0.0);
 }
@@ -38,11 +38,15 @@ void AWorldHandler::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ChunkActorTemplate = AChunkActor::StaticClass();
+
+	//initialize calculated parameters
+	ChunkSize = ChunkElementCount * BlockSize;
+	ChunkSizeHalf = ChunkSize / 2;
+	ChunksCount = (RenderRange * 2 + 1) ^ 2;
+
 	//PlayerCharacter reference
 	CharacterRef = Cast<AZDPlayerCharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("WorldHandler"));
-
-	LoadChunks();
 }
 
 //Called every frame
@@ -50,62 +54,68 @@ void AWorldHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (CharacterRef)
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, CharacterRef->GetActorLocation().ToString());
-		PlayerPosition = CharacterRef->GetActorLocation();
-	}
+	UpdatePlayerPosition();
+	RemoveChunks();
+	AddChunks();
 
 }
 
-
-void AWorldHandler::LoadChunks()
+void AWorldHandler::AddChunks()
 {
-	for (int32 i = 0; i < ChunksCount; ++i)
+	if (ChunkActorTemplate == nullptr)
 	{
-		TileMapComponent[i]->CreateNewTileMap(ChunkElementCount, ChunkElementCount, 16, 16, 1.0, true);
+		return;
 	}
 
-	FVector chunkLocation;
-	int idx = 0;
-	for (int32 i = -2; i < 3; i++)
+	for (int32 IndexX = -RenderRange; IndexX <= RenderRange; IndexX++)
 	{
-		for (int32 y = -2; y < 3; y++)
+		for (int32 IndexZ = -RenderRange; IndexZ <= RenderRange; IndexZ++)
 		{
-			chunkLocation.Set(i * ChunkElementCount * 16, 1, y * ChunkElementCount * 16);
-			TileMapComponent[idx]->SetRelativeLocation(chunkLocation);
+			const int32 GlobalX = IndexX + ChunkX;
+			const int32 GlobalZ = IndexZ + ChunkZ;
 
-			TextComponent[idx]->SetText(FText::FromString(FString::Printf(TEXT("%d"), idx)));
-			TextComponent[idx]->SetRelativeLocation(chunkLocation);
-
-			idx++;
-		}
-	}
-	
-	
-
-	for (int32 i = 0; i < ChunksCount; i++)
-	{
-		for (int32 y = 0; y < ChunkElementCount; y++)
-		{
-			for (int32 x = 0; x < ChunkElementCount; x++)
+			// chunk already exists
+			if (AChunkActor* Chunk = FindChunk(GlobalX, GlobalZ))
 			{
-				FPaperTileInfo LocalTileInfo;
-				LocalTileInfo.TileSet = TileSet1;
-				if (i > 5) {
-					LocalTileInfo.PackedTileIndex = 53;
-				}
-				else
-				{
-					LocalTileInfo.PackedTileIndex = FMath::RandRange(0, 624);
-				}
+				//
+			}
+			else
+			{
+				float ChunkPositionX = GlobalX * ChunkSize;
+				float ChunkPositionZ = GlobalZ * ChunkSize;
+				float XCenter = ChunkPositionX + ChunkSizeHalf;
+				float YCenter = ChunkPositionZ + ChunkSizeHalf;
 
-				TileMapComponent[i]->SetTile(x, y, 0, LocalTileInfo);
+				ChunkCoordinates.Add(FIntPoint(GlobalX, GlobalZ));
+
+				FTransform SpawnTransform = FTransform(FVector(ChunkPositionX, 0.0f, ChunkPositionZ));
+
+				AChunkActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AChunkActor>(ChunkActorTemplate, SpawnTransform);
+
+				SpawnedActor->BlockSize = BlockSize;
+				SpawnedActor->ChunkElementCount = ChunkElementCount;
+				SpawnedActor->LoadChunk();
+				/* Call ChunkActor variables...
+				* SpawnedActor->
+				* SpawnedActor-> ...
+				* 
+				*/
+				
+				ChunksArray.Add(SpawnedActor);
 			}
 		}
-		TileMapComponent[i]->SetDefaultCollisionThickness(100, true);
-		//TileMapComponent[i]->RebuildCollision();
 	}
+}
+
+AChunkActor* AWorldHandler::FindChunk(const int32 X, const int32 Y)
+{
+	int32 ChunkIndex = ChunkCoordinates.Find(FIntPoint(X, Y));
+	if (ChunkIndex != -1)
+	{
+		return ChunksArray[ChunkIndex];
+	}
+
+	return nullptr;
 }
 
 void AWorldHandler::RefreshChunks(int direction)
@@ -118,35 +128,67 @@ void AWorldHandler::RefreshChunks(int direction)
 	}
 }
 
-void AWorldHandler::CheckChunkBoundary()
-{
-	if (PlayerPosition.X < ChunksCenter.X - ChunkSizeHalf )
-	{
-		// left the Center in L
-		RefreshChunks(0);
-
-	}
-	if (PlayerPosition.X > ChunksCenter.X + ChunkSizeHalf)
-	{
-		// left the Center in R
-		RefreshChunks(1);
-	}
-	if (PlayerPosition.Z < ChunksCenter.Z - ChunkSizeHalf)
-	{
-		// left the Center in D
-		RefreshChunks(2);
-	}
-	if (PlayerPosition.Z > ChunksCenter.Z + ChunkSizeHalf)
-	{
-		// left the Center in U
-		RefreshChunks(3);
-	}
-}
-
 void AWorldHandler::RemoveBlockByIndex(int32 index)
 {
 }
 
 void AWorldHandler::AddBlockByVector(FVector& vector)
 {
+}
+
+FVector AWorldHandler::GetHalfVoxelSize()
+{
+	float VoxelSizeHalf = ChunkSize / 2;
+	return FVector(VoxelSizeHalf, VoxelSizeHalf, VoxelSizeHalf);
+}
+
+FIntPoint AWorldHandler::GetChunkCords(const FVector LocalPosition)
+{
+	FVector HalvVoxelSize = GetHalfVoxelSize();
+	FVector Pos = (HalvVoxelSize + LocalPosition) / ChunkSize;
+	int32 X = UKismetMathLibrary::FFloor(Pos.X);
+	int32 Z = UKismetMathLibrary::FFloor(Pos.Z);
+
+	return FIntPoint(X, Z);
+}
+
+void AWorldHandler::UpdatePlayerPosition()
+{
+	//update PlayerPosition
+	if (CharacterRef)
+	{
+		//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, CharacterRef->GetActorLocation().ToString());
+		PlayerPosition = CharacterRef->GetActorLocation();
+		//PlayerPosition = UGameplayStatics::GetPlayerPawn(GetOwner(), 0)->GetActorLocation();
+		ChunkX = PlayerPosition.X / ChunkSize;
+		ChunkZ = PlayerPosition.Z / ChunkSize;
+	}
+}
+
+void AWorldHandler::RemoveChunks()
+{
+	for (int32 Index = 0; Index < ChunkCoordinates.Num(); Index++)
+	{
+		FIntPoint Vect = ChunkCoordinates[Index];
+		float ChunkPositionX = Vect.X * ChunkSize;
+		float ChunkPositionZ = Vect.Y * ChunkSize;
+		bool InRanderRange = CheckRadius(ChunkPositionX + ChunkSizeHalf, ChunkPositionZ + ChunkSizeHalf);
+
+		if (!InRanderRange)
+		{
+			ChunkCoordinates.RemoveAt(Index, 1, false);
+			ChunksArray[Index]->Destroy();
+			ChunksArray.RemoveAt(Index, 1, false);
+		}
+	}
+
+	ChunkCoordinates.Shrink();
+	ChunksArray.Shrink();
+}
+
+bool AWorldHandler::CheckRadius(const float CenterX, const float CenterZ)
+{
+	float RenderDistnace = (FVector(CenterX - PlayerPosition.X, CenterZ - PlayerPosition.Z, 0.0f)).Size();
+
+	return RenderDistnace < (ChunkSize * RenderRange);
 }

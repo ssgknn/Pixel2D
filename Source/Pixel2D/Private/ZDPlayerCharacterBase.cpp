@@ -40,6 +40,8 @@ void AZDPlayerCharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	/*float velocity = GetCharacterMovement()->Velocity.Z;
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));*/
 }
 
 void AZDPlayerCharacterBase::BeginPlay()
@@ -53,7 +55,7 @@ void AZDPlayerCharacterBase::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase"));
+	//GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase"));
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
 }
 
@@ -105,7 +107,6 @@ void AZDPlayerCharacterBase::Look(const FInputActionValue& Value)
 
 void AZDPlayerCharacterBase::UpdateCapsuleRotation(float XValue)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), XValue));
 	if (XValue > 0)
 	{
 		//Controller->SetControlRotation(FRotator(0.0, 0.0, 0.0));

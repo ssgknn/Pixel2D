@@ -11,9 +11,42 @@ class PIXEL2D_API AChunkActor : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
+
+#pragma region DataVariables
+
+	UPROPERTY()
+	int32 ChunkElementCount;
+
+	UPROPERTY()
+	float ChunkSizeHalf;
+
+	//ChunksCenter
+	FVector ChunksCenter;
+
+	UPROPERTY()
+	int32 BlockSize;
+
+#pragma endregion DataVariables
+
+
+#pragma region Tilesets
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tilesets")
+	class UPaperTileSet* TileSet0;
+
+#pragma endregion Tilesets
+
+
+	UPROPERTY()
+	class UTextRenderComponent* TextComponent;
+
+	UPROPERTY()
+	class UPaperTileMapComponent* TileMapComponent;
+
+
 	// Sets default values for this actor's properties
-	AChunkActor();
+	AChunkActor(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	// Called when the game starts or when spawned
@@ -22,5 +55,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	void LoadChunk();
 
 };
