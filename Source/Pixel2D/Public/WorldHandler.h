@@ -15,11 +15,12 @@ public:
 
 #pragma region DataVariables
 
+	//Chunk
 	UPROPERTY()
-	int32 RenderRange = 3;
+	int32 RenderRange;
 
 	UPROPERTY()
-	int32 ChunkElementCount = 64;
+	int32 ChunkElementCount;
 
 	UPROPERTY()
 	int32 ChunkSize;
@@ -28,7 +29,7 @@ public:
 	int32 ChunkSizeHalf;
 
 	UPROPERTY()
-	int32 BlockSize = 16;
+	int32 BlockSize;
 
 	UPROPERTY()
 	int32 ChunksCount;
@@ -37,24 +38,28 @@ public:
 	TArray<FIntPoint> ChunkCoordinates;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
-	int32 ChunkX = 0;
+	int32 ChunkX;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
-	int32 ChunkZ = 0;
+	int32 ChunkZ;
 
-	//ChunksCenter
-	FVector ChunksCenter;
-
+	//chunk Actor class ref
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
 	TSubclassOf<AChunkActor> ChunkActorTemplate;
 
+	//array of loaded chunks
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VoxelComponent")
 	TArray<AChunkActor*> ChunksArray;
-	
-	UPROPERTY()
-	class AZDPlayerCharacterBase* CharacterRef;
 
-	//character position
+	//Fvector to compare player position to check if chunk loading needed
+	UPROPERTY()
+	FVector ChunkCenterPosition;
+	
+
+	//PlayerActor
+	UPROPERTY()
+	class AZDPlayerCharacterBase* PlayerActorRef;
+
 	UPROPERTY()
 	FVector PlayerPosition;
 
@@ -90,6 +95,8 @@ public:
 
 private:
 
+	void InitializeData();
+
 	FVector GetHalfVoxelSize();
 
 	FIntPoint GetChunkCords(const FVector LocalPosition);
@@ -101,5 +108,7 @@ private:
 
 	// Checking if chunk is in specific render distance
 	bool CheckRadius(const float CenterX, const float CenterY);
+
+	void CheckChunkLoads();
 
 };
