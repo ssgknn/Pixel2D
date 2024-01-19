@@ -35,6 +35,13 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
 
+	/** Move Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* PrimaryClickAction;
+
+	UPROPERTY()
+	class AChunkActor* ChunkActorReference;
+
 public:
 	AZDPlayerCharacterBase();
 
@@ -53,6 +60,9 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	/** Called for Clicking input */
+	void PrimaryClick(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void UpdateCapsuleRotation(float XValue);

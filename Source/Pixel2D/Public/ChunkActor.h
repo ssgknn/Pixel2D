@@ -59,4 +59,6 @@ public:
 	UFUNCTION()
 	void LoadChunk();
 
+	bool ModifyBlock(FVector2d BlockToModify, int32 DesiredBlock);
+
 };

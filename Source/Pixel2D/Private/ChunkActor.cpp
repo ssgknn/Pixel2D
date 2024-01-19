@@ -47,7 +47,7 @@ void AChunkActor::LoadChunk()
 			LocalTileInfo.TileSet = TileSet0;
 			if (FMath::RandRange(0, 624) < 312)
 			{
-				LocalTileInfo.PackedTileIndex = 31;
+				LocalTileInfo.PackedTileIndex = 16;
 			}
 			else
 			{
@@ -59,4 +59,14 @@ void AChunkActor::LoadChunk()
 	}
 	TileMapComponent->SetDefaultCollisionThickness(100, true);
 }
+
+bool AChunkActor::ModifyBlock(FVector2d BlockToModify, int DesiredBlock)
+{
+	FPaperTileInfo LocalTileInfo;
+	LocalTileInfo.TileSet = TileSet0;
+	LocalTileInfo.PackedTileIndex = DesiredBlock;
+	TileMapComponent->SetTile(BlockToModify.X, BlockToModify.Y, 0, LocalTileInfo);
+	return true;
+}
+
 

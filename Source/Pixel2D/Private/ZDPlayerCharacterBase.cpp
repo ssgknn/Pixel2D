@@ -12,6 +12,14 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Kismet/GameplayStatics.h"
+#include "PaperTileMapComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "PaperTileMapActor.h"
+#include "PaperTileMap.h"
+
+
+#include "ChunkActor.h"
 
 
 
@@ -33,7 +41,7 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-	
+
 }
 
 void AZDPlayerCharacterBase::Tick(float DeltaTime)
@@ -46,6 +54,7 @@ void AZDPlayerCharacterBase::Tick(float DeltaTime)
 
 void AZDPlayerCharacterBase::BeginPlay()
 {
+
 	Super::BeginPlay();
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -54,6 +63,17 @@ void AZDPlayerCharacterBase::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+
+		// Enable mouse cursor and disable mouse input in UI only mode
+		PlayerController->bShowMouseCursor = true;
+		PlayerController->bEnableClickEvents = true;
+		PlayerController->bEnableMouseOverEvents = true;
+
+		// Set input mode to game and UI
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+		PlayerController->SetInputMode(InputMode);
+
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase"));
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
@@ -70,6 +90,9 @@ void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::Move);
+
+		//Moving
+		EnhancedInputComponent->BindAction(PrimaryClickAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::PrimaryClick);
 
 	}
 }
@@ -103,6 +126,57 @@ void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
 void AZDPlayerCharacterBase::Look(const FInputActionValue& Value)
 {
 
+}
+
+void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
+{
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("APlayerCharacter::PrimaryClick()"));
+
+	FVector WorldLocation, WorldDirection;
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
+	{
+		PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
+	}
+
+	FVector Start = WorldLocation;
+	FVector End = Start + WorldDirection * 1000;
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("APlayerCharacter::PrimaryClick() S: %f"), Start.X));
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("APlayerCharacter::PrimaryClick() E: %f"), Start.X));
+
+	FCollisionQueryParams TraceParams(FName(TEXT("LineTrace")), true, this);
+	TraceParams.bTraceComplex = true;
+	FHitResult HitResult;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, TraceParams);
+
+	// Draw a debug line to visualize the trace
+	if (bHit)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("APlayerCharacter::PrimaryClick() - bHit"));
+		if (HitResult.GetActor())
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("APlayerCharacter::PrimaryClick() - GetActor()"));
+			if (HitResult.GetActor()->IsA(AChunkActor::StaticClass()))
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("APlayerCharacter::PrimaryClick() - IsA(AChunkActor::StaticClass()"));
+				AChunkActor* Chunk = Cast<AChunkActor>(HitResult.GetActor());
+				if (Chunk)
+				{
+					FVector2d hitblock = FVector2d(HitResult.Location.X, HitResult.Location.Z);
+					Chunk->ModifyBlock(hitblock, 16);
+					// ... do something with the TileMap
+				}
+			}
+			else
+			{
+				// It's another type of actor
+				AActor* OtherActor = HitResult.GetActor();
+				// ... handle other actor type
+			}
+		}
+	}
 }
 
 void AZDPlayerCharacterBase::UpdateCapsuleRotation(float XValue)
