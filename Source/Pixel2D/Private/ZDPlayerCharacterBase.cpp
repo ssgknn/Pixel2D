@@ -14,11 +14,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
 #include "PaperTileMapComponent.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "PaperTileMapActor.h"
 #include "PaperTileMap.h"
 
-
+#include "WorldHandler.h"
 #include "ChunkActor.h"
 
 
@@ -42,6 +40,7 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	
 }
 
 void AZDPlayerCharacterBase::Tick(float DeltaTime)
@@ -56,6 +55,16 @@ void AZDPlayerCharacterBase::BeginPlay()
 {
 
 	Super::BeginPlay();
+
+	//get WorldHandler reference
+		/*TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWorldHandler::StaticClass(), FoundActors);
+
+		if (FoundActors.Num() > 0)
+		{
+			WorldHandlerReference = Cast<AWorldHandler>(FoundActors[0]);
+		}*/
+
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -71,8 +80,12 @@ void AZDPlayerCharacterBase::BeginPlay()
 
 		// Set input mode to game and UI
 		FInputModeGameAndUI InputMode;
-		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		PlayerController->SetInputMode(InputMode);
+
+		// Set input mode to game only
+		/*FInputModeGameOnly InputMode;
+		PlayerController->SetInputMode(InputMode);*/
 
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase"));
@@ -130,9 +143,7 @@ void AZDPlayerCharacterBase::Look(const FInputActionValue& Value)
 
 void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 {
-
-	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("APlayerCharacter::PrimaryClick()"));
-
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase::PrimaryClick()"));
 	FVector WorldLocation, WorldDirection;
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	if (PlayerController)
@@ -143,37 +154,22 @@ void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 	FVector Start = WorldLocation;
 	FVector End = Start + WorldDirection * 1000;
 
-	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("APlayerCharacter::PrimaryClick() S: %f"), Start.X));
-	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("APlayerCharacter::PrimaryClick() E: %f"), Start.X));
-
 	FCollisionQueryParams TraceParams(FName(TEXT("LineTrace")), true, this);
 	TraceParams.bTraceComplex = true;
 	FHitResult HitResult;
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, TraceParams);
 
-	// Draw a debug line to visualize the trace
 	if (bHit)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("APlayerCharacter::PrimaryClick() - bHit"));
-		if (HitResult.GetActor())
+		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase:: -- bHit"));
+		if (HitResult.GetActor()->IsA(AChunkActor::StaticClass()))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("APlayerCharacter::PrimaryClick() - GetActor()"));
-			if (HitResult.GetActor()->IsA(AChunkActor::StaticClass()))
+			AChunkActor* Chunk = Cast<AChunkActor>(HitResult.GetActor());
+			if (Chunk)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("APlayerCharacter::PrimaryClick() - IsA(AChunkActor::StaticClass()"));
-				AChunkActor* Chunk = Cast<AChunkActor>(HitResult.GetActor());
-				if (Chunk)
-				{
-					FVector2d hitblock = FVector2d(HitResult.Location.X, HitResult.Location.Z);
-					Chunk->ModifyBlock(hitblock, 16);
-					// ... do something with the TileMap
-				}
-			}
-			else
-			{
-				// It's another type of actor
-				AActor* OtherActor = HitResult.GetActor();
-				// ... handle other actor type
+				GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase:: -- Chunk"));
+				FVector HitRelativeLocationToChunk = FVector(FMath::Abs(Chunk->GetActorLocation().X - Start.X), 0.0f, FMath::Abs(Chunk->GetActorLocation().Z - Start.Z));
+				Chunk->ModifyBlock(HitRelativeLocationToChunk, 16);
 			}
 		}
 	}

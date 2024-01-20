@@ -19,10 +19,7 @@ public:
 	int32 ChunkElementCount;
 
 	UPROPERTY()
-	float ChunkSizeHalf;
-
-	//ChunksCenter
-	FVector ChunksCenter;
+	int32 ChunkSize;
 
 	UPROPERTY()
 	int32 BlockSize;
@@ -37,11 +34,18 @@ public:
 
 #pragma endregion Tilesets
 
+	//Components
 
 	UPROPERTY()
+	USceneComponent* AttachComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	class UBoxComponent* CollisionBoxComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Componens")
 	class UTextRenderComponent* TextComponent;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "Componens")
 	class UPaperTileMapComponent* TileMapComponent;
 
 
@@ -52,13 +56,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void LoadChunk();
 
-	bool ModifyBlock(FVector2d BlockToModify, int32 DesiredBlock);
+	void ModifyBlock(FVector HitLocation, int32 DesiredBlockID);
 
 };

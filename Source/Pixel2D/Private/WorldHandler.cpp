@@ -97,6 +97,7 @@ void AWorldHandler::AddChunks()
 
 				SpawnedActor->BlockSize = BlockSize;
 				SpawnedActor->ChunkElementCount = ChunkElementCount;
+				SpawnedActor->ChunkSize = ChunkSize;
 				SpawnedActor->LoadChunk();
 				/* Call ChunkActor variables...
 				* SpawnedActor->

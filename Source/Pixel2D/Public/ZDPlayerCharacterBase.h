@@ -14,7 +14,7 @@ UCLASS()
 class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 {
 	GENERATED_BODY()
-	
+
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
@@ -39,8 +39,8 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* PrimaryClickAction;
 
-	UPROPERTY()
-	class AChunkActor* ChunkActorReference;
+	/*UPROPERTY()
+	class AWorldHandler* WorldHandlerReference;*/
 
 public:
 	AZDPlayerCharacterBase();
