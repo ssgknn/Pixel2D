@@ -13,6 +13,8 @@ class PIXEL2D_API AWorldHandler : public AActor
 	
 public:	
 
+	friend class AChunkActor;
+
 #pragma region DataVariables
 
 	//Chunk

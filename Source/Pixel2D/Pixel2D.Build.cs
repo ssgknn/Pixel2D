@@ -8,6 +8,8 @@ public class Pixel2D : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", "Paper2D", "PaperZD" }); 
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", "Paper2D", "PaperZD", "ProceduralMeshComponent" });
+
+        //PrivateDependencyModuleNames.AddRange(new string[] {  });
     }
 }

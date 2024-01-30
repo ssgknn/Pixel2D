@@ -12,19 +12,7 @@ class PIXEL2D_API AChunkActor : public AActor
 	GENERATED_BODY()
 	
 public:
-
-#pragma region DataVariables
-
-	UPROPERTY()
-	int32 ChunkElementCount;
-
-	UPROPERTY()
-	int32 ChunkSize;
-
-	UPROPERTY()
-	int32 BlockSize;
-
-#pragma endregion DataVariables
+	friend class AWorldHandler;
 
 
 #pragma region Tilesets
@@ -34,7 +22,19 @@ public:
 
 #pragma endregion Tilesets
 
-	//Components
+#pragma region ProceduralMeshData
+
+	UPROPERTY(EditAnywhere, Category = "TerrainMesh", Meta = (MakeEditWidget = true))
+	TArray<FVector> VerticesTerrain;
+
+	UPROPERTY()
+	TArray<int> TrianglesTerrain;
+
+#pragma endregion ProceduralMeshData
+
+private:
+	UPROPERTY()
+	class AWorldHandler* WorldHandlerRef;
 
 	UPROPERTY()
 	USceneComponent* AttachComponent;
@@ -48,16 +48,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Componens")
 	class UPaperTileMapComponent* TileMapComponent;
 
+	class UProceduralMeshComponent* ProceduralTerrainCollisionMesh;
 
-	// Sets default values for this actor's properties
+public:
 	AChunkActor(const FObjectInitializer& ObjectInitializer);
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()

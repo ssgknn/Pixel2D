@@ -20,11 +20,11 @@ class PIXEL2D_API UStructDataTypes : public UObject
 *	Sector element - X coordinate
 */
 USTRUCT(BlueprintType)
-struct PIXEL2D_API FSectorX
+struct PIXEL2D_API FChunkData
 {
 	GENERATED_USTRUCT_BODY()
 
-	/*UPROPERTY(BlueprintReadWrite, Category = "SectorX")
-	TArray<FVoxel> Voxels;*/
+	TArray<FUint32Vector2> BlockCoordsInChunk;
 
+	int32 BlockID;
 };

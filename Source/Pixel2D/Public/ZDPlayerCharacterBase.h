@@ -45,15 +45,13 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 public:
 	AZDPlayerCharacterBase();
 
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 
 	virtual void BeginPlay();
-
-	// APawn interface
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -65,6 +63,6 @@ protected:
 	void PrimaryClick(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void UpdateCapsuleRotation(float XValue);
+	void UpdateSpriteRotation(float XValue);
 
 };

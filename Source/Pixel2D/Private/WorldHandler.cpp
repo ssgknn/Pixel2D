@@ -14,7 +14,6 @@
 
 
 
-
 // Sets default values
 AWorldHandler::AWorldHandler()
 {
@@ -46,7 +45,7 @@ void AWorldHandler::Tick(float DeltaTime)
 void AWorldHandler::InitializeData()
 {
 	//Manually set data... later on from file
-	RenderRange = 3;
+	RenderRange = 2;
 	ChunkElementCount = 64;
 	BlockSize = 16;
 	ChunkX = 0;
@@ -95,16 +94,18 @@ void AWorldHandler::AddChunks()
 
 				AChunkActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AChunkActor>(ChunkActorTemplate, SpawnTransform);
 
-				SpawnedActor->BlockSize = BlockSize;
-				SpawnedActor->ChunkElementCount = ChunkElementCount;
-				SpawnedActor->ChunkSize = ChunkSize;
+				SpawnedActor->WorldHandlerRef = this;
 				SpawnedActor->LoadChunk();
+
 				/* Call ChunkActor variables...
-				* SpawnedActor->
-				* SpawnedActor-> ...
-				* 
+				*  SpawnedActor->
+				*  SpawnedActor-> ...
+				*  SpawnedActor->BlockSize = BlockSize;
+				*  SpawnedActor->ChunkElementCount = ChunkElementCount;
+				*  SpawnedActor->ChunkSize = ChunkSize;
+				*
 				*/
-				
+
 				ChunksArray.Add(SpawnedActor);
 			}
 		}

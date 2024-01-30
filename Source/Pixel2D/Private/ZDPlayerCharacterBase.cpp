@@ -15,10 +15,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "PaperTileMapComponent.h"
 #include "PaperTileMap.h"
+#include "Net/UnrealNetwork.h"
 
 #include "WorldHandler.h"
 #include "ChunkActor.h"
-
 
 
 AZDPlayerCharacterBase::AZDPlayerCharacterBase()
@@ -40,15 +40,16 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	
+	GetSprite()->SetIsReplicated(true); // Enable replication to SpriteComponent
+	SetReplicateMovement(true);
+	SetReplicates(true);
 }
 
-void AZDPlayerCharacterBase::Tick(float DeltaTime)
+void AZDPlayerCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::Tick(DeltaTime);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	/*float velocity = GetCharacterMovement()->Velocity.Z;
-	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));*/
+	//DOREPLIFETIME(AZDPlayerCharacterBase, GetSprite());
 }
 
 void AZDPlayerCharacterBase::BeginPlay()
@@ -65,7 +66,7 @@ void AZDPlayerCharacterBase::BeginPlay()
 			WorldHandlerReference = Cast<AWorldHandler>(FoundActors[0]);
 		}*/
 
-	//Add Input Mapping Context
+		//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -90,6 +91,14 @@ void AZDPlayerCharacterBase::BeginPlay()
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase"));
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
+}
+
+void AZDPlayerCharacterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	/*float velocity = GetCharacterMovement()->Velocity.Z;
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));*/
 }
 
 void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -131,8 +140,12 @@ void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.X);
 		//AddMovementInput(RightDirection, MovementVector.X);
 
-		//update the controller rotation
-		UpdateCapsuleRotation(MovementVector.X);
+		UpdateSpriteRotation(MovementVector.X);
+
+		/*if (HasAuthority())
+		{
+			UpdateSpriteRotation(MovementVector.X);
+		}*/
 	}
 }
 
@@ -175,7 +188,7 @@ void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 	}
 }
 
-void AZDPlayerCharacterBase::UpdateCapsuleRotation(float XValue)
+void AZDPlayerCharacterBase::UpdateSpriteRotation(float XValue)
 {
 	if (XValue > 0)
 	{
