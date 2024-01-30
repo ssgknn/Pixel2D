@@ -24,7 +24,8 @@ public:
 
 #pragma region ProceduralMeshData
 
-	UPROPERTY(EditAnywhere, Category = "TerrainMesh", Meta = (MakeEditWidget = true))
+	//EditAnywhere, Category = "TerrainMesh", Meta = (MakeEditWidget = true)
+	UPROPERTY()
 	TArray<FVector> VerticesTerrain;
 
 	UPROPERTY()

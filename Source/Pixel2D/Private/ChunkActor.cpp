@@ -65,6 +65,7 @@ void AChunkActor::LoadChunk()
 	TileMapComponent->SetRelativeLocation(FVector(blockSize / 2.0f, 0.0f, -blockSize / 2.0f));
 	
 	
+	int32 i = 0;
 
 	for (int32 z = 0; z < chunkElementCount; z++)
 	{
@@ -84,41 +85,68 @@ void AChunkActor::LoadChunk()
 				VerticesTerrain.Add(FVector(blockSize * (x + 1), -50, -blockSize * z));
 				VerticesTerrain.Add(FVector(blockSize * (x + 1),  -50,  -blockSize * (z + 1)));
 				VerticesTerrain.Add(FVector(blockSize * x, -50,  -blockSize * (z + 1)));
-				VerticesTerrain.Add(FVector(blockSize * x, +50,  - blockSize * z));
-				VerticesTerrain.Add(FVector(blockSize * (x + 1), +50,  -blockSize * z));
-				VerticesTerrain.Add(FVector(blockSize * (x + 1), +50,  -blockSize * (z + 1)));
-				VerticesTerrain.Add(FVector(blockSize * x, +50, -blockSize * (z + 1)));
+				VerticesTerrain.Add(FVector(blockSize * x, +100,  - blockSize * z));
+				VerticesTerrain.Add(FVector(blockSize * (x + 1), +100,  -blockSize * z));
+				VerticesTerrain.Add(FVector(blockSize * (x + 1), +100,  -blockSize * (z + 1)));
+				VerticesTerrain.Add(FVector(blockSize * x, +100, -blockSize * (z + 1)));
 
+
+				TrianglesTerrain.Add(i + 0);
+				TrianglesTerrain.Add(i + 4);
+				TrianglesTerrain.Add(i + 5);
+				TrianglesTerrain.Add(i + 5);
+				TrianglesTerrain.Add(i + 1);
+				TrianglesTerrain.Add(i + 0);
+				TrianglesTerrain.Add(i + 1);
+				TrianglesTerrain.Add(i + 5);
+				TrianglesTerrain.Add(i + 2);
+				TrianglesTerrain.Add(i + 2);
+				TrianglesTerrain.Add(i + 5);
+				TrianglesTerrain.Add(i + 6);
+				TrianglesTerrain.Add(i + 3);
+				TrianglesTerrain.Add(i + 2);
+				TrianglesTerrain.Add(i + 7);
+				TrianglesTerrain.Add(i + 7);
+				TrianglesTerrain.Add(i + 2);
+				TrianglesTerrain.Add(i + 6);
+				TrianglesTerrain.Add(i + 0);
+				TrianglesTerrain.Add(i + 3);
+				TrianglesTerrain.Add(i + 4);
+				TrianglesTerrain.Add(i + 4);
+				TrianglesTerrain.Add(i + 3);
+				TrianglesTerrain.Add(i + 7);
+
+				i += 8;
 			}
 			TileMapComponent->SetTile(x, z, 0, LocalTileInfo);
 		}
 	}
 
-	/*for (int32 i = 0; i < VerticesTerrain.Num() / 8; i++)
+	/*for (int32 i = 0; i < VerticesTerrain.Num() / 8; i += 8)
 	{
 		TrianglesTerrain.Add(i + 0);
-		TrianglesTerrain.Add(i + 1);
-		TrianglesTerrain.Add(i + 5);
-		TrianglesTerrain.Add(i + 5);
 		TrianglesTerrain.Add(i + 4);
+		TrianglesTerrain.Add(i + 5);
+		TrianglesTerrain.Add(i + 5);
+		TrianglesTerrain.Add(i + 1);
 		TrianglesTerrain.Add(i + 0);
 		TrianglesTerrain.Add(i + 1);
-		TrianglesTerrain.Add(i + 2);
-		TrianglesTerrain.Add(i + 6);
-		TrianglesTerrain.Add(i + 6);
 		TrianglesTerrain.Add(i + 5);
-		TrianglesTerrain.Add(i + 1);
 		TrianglesTerrain.Add(i + 2);
-		TrianglesTerrain.Add(i + 3);
-		TrianglesTerrain.Add(i + 7);
-		TrianglesTerrain.Add(i + 7);
+		TrianglesTerrain.Add(i + 2);
+		TrianglesTerrain.Add(i + 5);
 		TrianglesTerrain.Add(i + 6);
+		TrianglesTerrain.Add(i + 3);
 		TrianglesTerrain.Add(i + 2);
+		TrianglesTerrain.Add(i + 7);
+		TrianglesTerrain.Add(i + 7);
+		TrianglesTerrain.Add(i + 2);
+		TrianglesTerrain.Add(i + 6);
 		TrianglesTerrain.Add(i + 0);
-		TrianglesTerrain.Add(i + 4);
-		TrianglesTerrain.Add(i + 3);
 		TrianglesTerrain.Add(i + 3);
 		TrianglesTerrain.Add(i + 4);
+		TrianglesTerrain.Add(i + 4);
+		TrianglesTerrain.Add(i + 3);
 		TrianglesTerrain.Add(i + 7);
 	}*/
 
