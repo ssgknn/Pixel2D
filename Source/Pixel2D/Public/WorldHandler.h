@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "StructDataTypes.h"
 #include "WorldHandler.generated.h"
 
 UCLASS()
@@ -17,7 +18,11 @@ public:
 
 #pragma region DataVariables
 
-	//Chunk
+	// ChunkDATA
+	UPROPERTY()
+	TArray<FChunkData> WorldDATA;
+
+	// Chunk
 	UPROPERTY()
 	int32 RenderRange;
 
@@ -45,20 +50,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
 	int32 ChunkZ;
 
-	//chunk Actor class ref
+	// chunk Actor class ref
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
 	TSubclassOf<AChunkActor> ChunkActorTemplate;
 
-	//array of loaded chunks
+	// array of loaded chunks
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VoxelComponent")
 	TArray<AChunkActor*> ChunksArray;
 
-	//Fvector to compare player position to check if chunk loading needed
+	// Fvector to compare player position to check if chunk loading needed
 	UPROPERTY()
 	FVector ChunkCenterPosition;
 	
+	UPROPERTY()
+	class UWorldGenerator* WorldGen;
 
-	//PlayerActor
+	UPROPERTY()
+	class UFileHandler* FileHandler;
+
+	// PlayerActor
 	UPROPERTY()
 	class AZDPlayerCharacterBase* PlayerActorRef;
 
@@ -72,8 +82,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-
+public:
 	// Sets default values for this actor's properties
 	AWorldHandler();
 
@@ -96,7 +105,6 @@ public:
 	void AddBlockByVector(FVector& vector);
 
 private:
-
 	void InitializeData();
 
 	FVector GetHalfVoxelSize();
@@ -113,4 +121,5 @@ private:
 
 	void CheckChunkLoads();
 
+	FChunkData GetFChunkDataByChunkCoordinate(const FIntPoint& TargetChunkCoordinate);
 };

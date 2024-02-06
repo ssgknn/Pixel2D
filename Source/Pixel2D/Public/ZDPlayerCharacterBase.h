@@ -43,6 +43,14 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 	class AWorldHandler* WorldHandlerReference;*/
 
 public:
+	UPROPERTY(ReplicatedUsing = OnRep_CharacterRotation)
+	uint8 CharacterRotation;
+	UFUNCTION()
+	void OnRep_CharacterRotation();
+	UFUNCTION(Server, unreliable)
+	void Server_SetCharacterRotation(uint8 NewRotation);
+
+public:
 	AZDPlayerCharacterBase();
 
 	virtual void Tick(float DeltaTime) override;
@@ -61,8 +69,5 @@ protected:
 
 	/** Called for Clicking input */
 	void PrimaryClick(const FInputActionValue& Value);
-
-	UFUNCTION()
-	void UpdateSpriteRotation(float XValue);
 
 };

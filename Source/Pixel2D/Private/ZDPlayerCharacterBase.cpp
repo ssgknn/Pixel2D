@@ -23,6 +23,8 @@
 
 AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 {
+	bReplicates = true;
+
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -40,7 +42,7 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	GetSprite()->SetIsReplicated(true); // Enable replication to SpriteComponent
+	//GetSprite()->SetIsReplicated(true); // Enable replication to SpriteComponent
 	SetReplicateMovement(true);
 	SetReplicates(true);
 }
@@ -49,7 +51,7 @@ void AZDPlayerCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//DOREPLIFETIME(AZDPlayerCharacterBase, GetSprite());
+	DOREPLIFETIME(AZDPlayerCharacterBase, CharacterRotation);
 }
 
 void AZDPlayerCharacterBase::BeginPlay()
@@ -97,8 +99,10 @@ void AZDPlayerCharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	/*float velocity = GetCharacterMovement()->Velocity.Z;
-	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));*/
+	/*
+	float velocity = GetCharacterMovement()->Velocity.Z;
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));
+	*/
 }
 
 void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -140,12 +144,16 @@ void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.X);
 		//AddMovementInput(RightDirection, MovementVector.X);
 
-		UpdateSpriteRotation(MovementVector.X);
-
-		/*if (HasAuthority())
+		
+		if (MovementVector.X < 0 && !CharacterRotation)
 		{
-			UpdateSpriteRotation(MovementVector.X);
-		}*/
+			Server_SetCharacterRotation(1);
+		}
+		else if(MovementVector.X > 0 && CharacterRotation)
+		{
+			Server_SetCharacterRotation(0);
+		}
+		
 	}
 }
 
@@ -188,20 +196,40 @@ void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 	}
 }
 
-void AZDPlayerCharacterBase::UpdateSpriteRotation(float XValue)
+
+// -------- OnRep --------
+void AZDPlayerCharacterBase::OnRep_CharacterRotation()
 {
-	if (XValue > 0)
+	if (CharacterRotation)
 	{
 		//Controller->SetControlRotation(FRotator(0.0, 0.0, 0.0));
-		FRotator Rotation = FRotator(0.0f, 0.0f, 0.0f);
-		GetSprite()->SetWorldRotation(Rotation);
-	}
-	else if (XValue < 0)
-	{
-		//Controller->SetControlRotation(FRotator(0.0, 180.0, 180.0));
 		FRotator Rotation = FRotator(0.0f, 180.0f, 0.0f);
 		GetSprite()->SetWorldRotation(Rotation);
 	}
+	else
+	{
+		//Controller->SetControlRotation(FRotator(0.0, 180.0, 180.0));
+		FRotator Rotation = FRotator(0.0f, 0.0f, 0.0f);
+		GetSprite()->SetWorldRotation(Rotation);
+	}
+}
 
-	
+// -------- RPC --------
+//bool AZDPlayerCharacterBase::Server_SetCharacterRotation_Validate(uint8 NewRotation)
+//{
+//	// You can add validation logic here if needed
+//	return true;
+//}
+
+void AZDPlayerCharacterBase::Server_SetCharacterRotation_Implementation(uint8 NewRotation)
+{
+	// This function is called on the server when a client requests to change CharacterRotation
+	if (HasAuthority())
+	{
+		// Do any server-side logic here
+		CharacterRotation = NewRotation;
+
+		// Call OnRep function manually to replicate the change to all clients
+		OnRep_CharacterRotation();
+	}
 }

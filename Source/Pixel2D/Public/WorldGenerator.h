@@ -15,10 +15,13 @@ class PIXEL2D_API UWorldGenerator : public UObject
 {
 	GENERATED_BODY()
 	
+public:
+	friend class AWorldHandler;
+
 private:
 
 	UPROPERTY()
-	TArray<FChunkData> ChunkData;
+	TArray<FChunkData> WorldData;
 
 public:
 

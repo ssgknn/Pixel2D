@@ -5,6 +5,8 @@
 #include "ZDPlayerCharacterBase.h"
 #include "ChunkActor.h"
 #include "PlayerStatsData.h"
+#include "WorldGenerator.h"
+#include "FileHandler.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Components/TextRenderComponent.h"
@@ -12,14 +14,11 @@
 #include <Kismet/KismetMathLibrary.h>
 
 
-
-
 // Sets default values
 AWorldHandler::AWorldHandler()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
@@ -29,7 +28,9 @@ void AWorldHandler::BeginPlay()
 
 	//initialize calculated parameters
 	InitializeData();
-	
+
+	WorldGen->GenerateWorld(ChunkElementCount);
+	WorldDATA = WorldGen->WorldData;
 }
 
 //Called every frame
@@ -46,7 +47,7 @@ void AWorldHandler::InitializeData()
 {
 	//Manually set data... later on from file
 	RenderRange = 2;
-	ChunkElementCount = 64;
+	ChunkElementCount = 32;
 	BlockSize = 16;
 	ChunkX = 0;
 	ChunkZ = 0;
@@ -59,6 +60,8 @@ void AWorldHandler::InitializeData()
 
 	//Called data  to initialize
 	ChunkActorTemplate = AChunkActor::StaticClass();
+	WorldGen = NewObject<UWorldGenerator>(this, UWorldGenerator::StaticClass());
+	FileHandler = NewObject<UFileHandler>(this, UFileHandler::StaticClass());
 	PlayerActorRef = Cast<AZDPlayerCharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 }
 
@@ -67,6 +70,11 @@ void AWorldHandler::AddChunks()
 	if (ChunkActorTemplate == nullptr)
 	{
 		return;
+	}
+
+	for (int32 idx = 0; idx < WorldDATA.Num(), idx++;)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString::Printf(TEXT("%ChunkCoordinates(%f, %f)"), WorldDATA[idx].ChunkCoordinate.Y, WorldDATA[idx].ChunkCoordinate.Y));
 	}
 
 	for (int32 IndexX = -RenderRange; IndexX <= RenderRange; IndexX++)
@@ -79,7 +87,7 @@ void AWorldHandler::AddChunks()
 			// chunk already exists
 			if (AChunkActor* Chunk = FindChunk(GlobalX, GlobalZ))
 			{
-				//
+				return;
 			}
 			else
 			{
@@ -94,8 +102,16 @@ void AWorldHandler::AddChunks()
 
 				AChunkActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AChunkActor>(ChunkActorTemplate, SpawnTransform);
 
+				FChunkData* FoundChunkData = WorldDATA.FindByPredicate([&](const FChunkData& ChunkData) 
+												{ return ChunkData.ChunkCoordinate == FIntPoint(GlobalX, GlobalZ); });
+
 				SpawnedActor->WorldHandlerRef = this;
-				SpawnedActor->LoadChunk();
+				SpawnedActor->SetFChunkData(*FoundChunkData);
+				SpawnedActor->LoadChunk(GlobalX, GlobalZ);
+				GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString::Printf(TEXT("%ChunkCoordinates(%f, %f)"), WorldDATA[0].ChunkCoordinate.Y, WorldDATA[0].ChunkCoordinate.Y));
+
+
+				//SpawnedActor->RefreshCollision(BlockSize, ChunkElementCount);
 
 				/* Call ChunkActor variables...
 				*  SpawnedActor->
@@ -172,7 +188,7 @@ void AWorldHandler::UpdatePlayerPosition()
 
 void AWorldHandler::RemoveChunks()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, TEXT("WorldHandler::RemoveChunks()"));
+	//GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Red, TEXT("WorldHandler::RemoveChunks()"));
 	for (int32 Index = 0; Index < ChunkCoordinates.Num(); Index++)
 	{
 		FIntPoint Vect = ChunkCoordinates[Index];
@@ -208,4 +224,22 @@ void AWorldHandler::CheckChunkLoads()
 		ChunkCenterPosition = PlayerPosition;
 		RemoveChunks();
 	}
+}
+
+FChunkData AWorldHandler::GetFChunkDataByChunkCoordinate(const FIntPoint& TargetChunkCoordinate)
+{
+	const FChunkData* FoundChunkData = WorldDATA.FindByPredicate([&](const FChunkData& ChunkData) {
+		return ChunkData.ChunkCoordinate == TargetChunkCoordinate;
+		});
+
+	if (FoundChunkData)
+	{
+		// Found the matching ChunkCoordinate, return the BlockTextureID
+		return *FoundChunkData;
+	}
+
+	// If the function reaches here, the ChunkCoordinate was not found
+	// You may want to handle this case accordingly (e.g., return an empty array)
+	FChunkData empty;
+	return empty;
 }

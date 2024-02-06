@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "StructDataTypes.h"
 #include "ChunkActor.generated.h"
 
 UCLASS()
@@ -51,6 +52,8 @@ private:
 
 	class UProceduralMeshComponent* ProceduralTerrainCollisionMesh;
 
+	FChunkData ChunkData;
+
 public:
 	AChunkActor(const FObjectInitializer& ObjectInitializer);
 
@@ -61,8 +64,18 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-	void LoadChunk();
+	void LoadChunk(int32 ChunkGlobalX, int32 ChunkGlobalZ);
+
+	UFUNCTION()
+	void RefreshCollision(int32 blockSize, int32 chunkElementCount);
 
 	void ModifyBlock(FVector HitLocation, int32 DesiredBlockID);
 
+private:
+	//TArray<int32> GetBlockTextureIDByChunkCoordinate(const FIntPoint& TargetChunkCoordinate);
+
+private:
+	// getters setters
+	UFUNCTION()
+	void SetFChunkData(FChunkData data);
 };

@@ -17,14 +17,14 @@ class PIXEL2D_API UStructDataTypes : public UObject
 };
 
 /**
-*	Sector element - X coordinate
+*	ChunkData
 */
 USTRUCT(BlueprintType)
 struct PIXEL2D_API FChunkData
 {
 	GENERATED_USTRUCT_BODY()
 
-	TArray<FUint32Vector2> BlockCoordsInChunk;
-
-	int32 BlockID;
+	FIntPoint ChunkCoordinate;
+	TArray<int32> BlockTextureID;
+	TArray<uint8> bHasCollision;
 };
