@@ -96,9 +96,6 @@ public:
 	AChunkActor* FindChunk(const int32 X, const int32 Y);
 
 	UFUNCTION()
-	void RefreshChunks(int direction);
-
-	UFUNCTION()
 	void RemoveBlockByIndex(int32 index);
 
 	UFUNCTION()

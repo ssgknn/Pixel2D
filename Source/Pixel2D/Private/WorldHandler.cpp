@@ -72,11 +72,6 @@ void AWorldHandler::AddChunks()
 		return;
 	}
 
-	for (int32 idx = 0; idx < WorldDATA.Num(), idx++;)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString::Printf(TEXT("%ChunkCoordinates(%f, %f)"), WorldDATA[idx].ChunkCoordinate.Y, WorldDATA[idx].ChunkCoordinate.Y));
-	}
-
 	for (int32 IndexX = -RenderRange; IndexX <= RenderRange; IndexX++)
 	{
 		for (int32 IndexZ = -RenderRange; IndexZ <= RenderRange; IndexZ++)
@@ -108,8 +103,6 @@ void AWorldHandler::AddChunks()
 				SpawnedActor->WorldHandlerRef = this;
 				SpawnedActor->SetFChunkData(*FoundChunkData);
 				SpawnedActor->LoadChunk(GlobalX, GlobalZ);
-				GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString::Printf(TEXT("%ChunkCoordinates(%f, %f)"), WorldDATA[0].ChunkCoordinate.Y, WorldDATA[0].ChunkCoordinate.Y));
-
 
 				//SpawnedActor->RefreshCollision(BlockSize, ChunkElementCount);
 
@@ -137,16 +130,6 @@ AChunkActor* AWorldHandler::FindChunk(const int32 X, const int32 Y)
 	}
 
 	return nullptr;
-}
-
-void AWorldHandler::RefreshChunks(int direction)
-{
-	FVector chunkLocation;
-
-	if (direction == 0)
-	{
-
-	}
 }
 
 void AWorldHandler::RemoveBlockByIndex(int32 index)
