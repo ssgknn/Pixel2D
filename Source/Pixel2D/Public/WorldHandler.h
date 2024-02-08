@@ -41,14 +41,17 @@ public:
 	UPROPERTY()
 	int32 ChunksCount;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
-	TArray<FIntPoint> ChunkCoordinates;
+	UPROPERTY()
+	FIntPoint CenterChunkCoords;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
-	int32 ChunkX;
+	UPROPERTY()
+	FIntPoint ChunkCoordsPlayerAt;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
-	int32 ChunkZ;
+	UPROPERTY()
+	TArray<FIntPoint> ActiveChunkCoordinates;
+
+	UPROPERTY()
+	TArray<FIntPoint> ChunkCoordinatesShouldBeActive;
 
 	// chunk Actor class ref
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
@@ -59,8 +62,8 @@ public:
 	TArray<AChunkActor*> ChunksArray;
 
 	// Fvector to compare player position to check if chunk loading needed
-	UPROPERTY()
-	FVector ChunkCenterPosition;
+	/*UPROPERTY()
+	FVector ChunkCenterPosition;*/
 	
 	UPROPERTY()
 	class UWorldGenerator* WorldGen;
@@ -74,6 +77,8 @@ public:
 
 	UPROPERTY()
 	FVector PlayerPosition;
+
+	uint8 bFirstLaunch;
 
 #pragma endregion DataVariables
 
@@ -92,31 +97,19 @@ public:
 	UFUNCTION()
 	void AddChunks();
 
-	UFUNCTION(BlueprintCallable, Category = "Voxel")
-	AChunkActor* FindChunk(const int32 X, const int32 Y);
-
 	UFUNCTION()
-	void RemoveBlockByIndex(int32 index);
-
-	UFUNCTION()
-	void AddBlockByVector(FVector& vector);
+	uint8 IsChunkExists(const int32 X, const int32 Y);
 
 private:
 	void InitializeData();
 
-	FVector GetHalfVoxelSize();
-
-	FIntPoint GetChunkCords(const FVector LocalPosition);
-
 	void UpdatePlayerPosition();
 
-	// Removing all chunks which are not in render range anymore
 	void RemoveChunks();
 
-	// Checking if chunk is in specific render distance
-	bool CheckRadius(const float CenterX, const float CenterY);
+	void RefreshChunks();
 
-	void CheckChunkLoads();
+	FIntPoint GetChunkCoordPlayerAt();
 
 	FChunkData GetFChunkDataByChunkCoordinate(const FIntPoint& TargetChunkCoordinate);
 };

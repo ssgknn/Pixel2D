@@ -5,7 +5,7 @@
 
 void UWorldGenerator::GenerateWorld(int32 ChunkElementCount)
 {
-	int32 GenerationRange = 20;
+	int32 GenerationRange = 100;
 
 	FChunkData chunkData;
 

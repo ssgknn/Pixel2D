@@ -15,6 +15,8 @@ class PIXEL2D_API AChunkActor : public AActor
 public:
 	friend class AWorldHandler;
 
+	UPROPERTY(EditAnywhere, Category = "Componens")
+	class UTextRenderComponent* TextComponent;
 
 #pragma region Tilesets
 
@@ -45,9 +47,6 @@ private:
 	class UBoxComponent* CollisionBoxComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Componens")
-	class UTextRenderComponent* TextComponent;
-
-	UPROPERTY(EditAnywhere, Category = "Componens")
 	class UPaperTileMapComponent* TileMapComponent;
 
 	class UProceduralMeshComponent* ProceduralTerrainCollisionMesh;
@@ -64,7 +63,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-	void LoadChunk(int32 ChunkGlobalX, int32 ChunkGlobalZ);
+	void LoadChunk();
 
 	UFUNCTION()
 	void RefreshCollision(int32 blockSize, int32 chunkElementCount);

@@ -164,7 +164,7 @@ void AZDPlayerCharacterBase::Look(const FInputActionValue& Value)
 
 void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase::PrimaryClick()"));
+	//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase::PrimaryClick()"));
 	FVector WorldLocation, WorldDirection;
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	if (PlayerController)
@@ -182,13 +182,13 @@ void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 
 	if (bHit)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase:: -- bHit"));
+		//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase:: -- bHit"));
 		if (HitResult.GetActor()->IsA(AChunkActor::StaticClass()))
 		{
 			AChunkActor* Chunk = Cast<AChunkActor>(HitResult.GetActor());
 			if (Chunk)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase:: -- Chunk"));
+				//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase:: -- Chunk"));
 				FVector HitRelativeLocationToChunk = FVector(FMath::Abs(Chunk->GetActorLocation().X - Start.X), 0.0f, FMath::Abs(Chunk->GetActorLocation().Z - Start.Z));
 				Chunk->ModifyBlock(HitRelativeLocationToChunk, 16);
 			}

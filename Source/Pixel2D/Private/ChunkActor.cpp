@@ -24,6 +24,9 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	TileMapComponent = CreateDefaultSubobject<UPaperTileMapComponent>(TEXT("TileMap"));
 	TileMapComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
+	TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComp"));
+	TextComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
 	CollisionBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionBoxComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
@@ -52,8 +55,12 @@ void AChunkActor::Tick(float DeltaTime)
 
 }
 
-void AChunkActor::LoadChunk(int32 ChunkGlobalX, int32 ChunkGlobalZ)
+void AChunkActor::LoadChunk()
 {
+
+	TextComponent->AddRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
+	TextComponent->AddRelativeLocation(FVector(0.0f, 1.0f, 0.0f));
+
 	int32 blockSize = WorldHandlerRef->BlockSize;
 	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
 	
