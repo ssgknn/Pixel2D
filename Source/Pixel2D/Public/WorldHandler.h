@@ -112,4 +112,5 @@ private:
 	FIntPoint GetChunkCoordPlayerAt();
 
 	FChunkData GetFChunkDataByChunkCoordinate(const FIntPoint& TargetChunkCoordinate);
+
 };

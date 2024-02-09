@@ -8,6 +8,7 @@
 #include "PaperTileSet.h"
 #include "Components/BoxComponent.h"
 #include "ProceduralMeshComponent.h"
+#include "Net/UnrealNetwork.h"
 
 #include "WorldHandler.h"
 #include "../../../../../Program Files/Epic Games/UE_5.1/Engine/Plugins/Runtime/ProceduralMeshComponent/Source/ProceduralMeshComponent/Public/ProceduralMeshComponent.h"
@@ -53,6 +54,13 @@ void AChunkActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AChunkActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AChunkActor, ChunkData);
 }
 
 void AChunkActor::LoadChunk()
@@ -291,6 +299,8 @@ void AChunkActor::ModifyBlock(FVector HitLocation, int32 DesiredBlockID)
 	RefreshCollisionV2(blockSize, WorldHandlerRef->ChunkElementCount);
 
 	TileMapComponent->SetTile(BlockToChangeX, BlockToChangeZ, 0, LocalTileInfo);
+
+	Server_SetChunkData(HitLocation, DesiredBlockID);
 }
 
 //TArray<int32> AChunkActor::GetBlockTextureIDByChunkCoordinate(const FIntPoint& TargetChunkCoordinate)
@@ -310,8 +320,45 @@ void AChunkActor::ModifyBlock(FVector HitLocation, int32 DesiredBlockID)
 //	return TArray<int32>();
 //}
 
+// -------- OnRep --------
+#pragma region OnRep
+
+void AChunkActor::OnRep_ChunkDataChanged()
+{
+	RefreshCollisionV2(WorldHandlerRef->BlockSize, WorldHandlerRef->ChunkElementCount);
+
+}
+
+void AChunkActor::Server_SetChunkData_Implementation(FVector HitLocation, int32 DesiredBlockID)
+{
+	if (HasAuthority())
+	{
+		int32 blockSize = WorldHandlerRef->BlockSize;
+		int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
+
+		FPaperTileInfo LocalTileInfo;
+		LocalTileInfo.TileSet = TileSet0;
+		LocalTileInfo.PackedTileIndex = 336; // DesiredBlockID;
+
+		int32 BlockToChangeX = FMath::Floor(HitLocation.X / blockSize);
+		int32 BlockToChangeZ = FMath::Floor(HitLocation.Z / blockSize);
+
+		ChunkData.BlockTextureID[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 336;  //DesiredBlockID;
+		ChunkData.bHasCollision[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 1;
+	}
+}
+
+#pragma endregion OnRep
+
+
+
+// -------- SettersGetters --------
+#pragma region SettersGetters
+
 void AChunkActor::SetFChunkData(FChunkData data)
 {
 	ChunkData = data;
 }
+
+#pragma endregion SettersGetters
 

@@ -51,16 +51,19 @@ private:
 
 	class UProceduralMeshComponent* ProceduralTerrainCollisionMesh;
 
+	UPROPERTY(ReplicatedUsing = OnRep_ChunkDataChanged)
 	FChunkData ChunkData;
 
 public:
 	AChunkActor(const FObjectInitializer& ObjectInitializer);
 
+	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	virtual void BeginPlay() override;
 
 public:
-	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void LoadChunk();
@@ -74,9 +77,15 @@ public:
 	void ModifyBlock(FVector HitLocation, int32 DesiredBlockID);
 
 private:
-	//TArray<int32> GetBlockTextureIDByChunkCoordinate(const FIntPoint& TargetChunkCoordinate);
 
-private:
+	// -------- OnRep --------
+	UFUNCTION()
+	void OnRep_ChunkDataChanged();
+
+	// -------- RPC --------
+	UFUNCTION(Server, reliable)
+	void Server_SetChunkData(FVector HitLocation, int32 DesiredBlockID);
+
 	// getters setters
 	UFUNCTION()
 	void SetFChunkData(FChunkData data);
