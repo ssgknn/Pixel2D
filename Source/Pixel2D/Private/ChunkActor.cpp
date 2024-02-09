@@ -85,8 +85,8 @@ void AChunkActor::LoadChunk()
 
 	CollisionBoxComponent->SetBoxExtent(FVector(WorldHandlerRef->ChunkSize * 0.5f, 20.0f, WorldHandlerRef->ChunkSize * 0.5f));
 	CollisionBoxComponent->SetRelativeLocation(FVector(WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(WorldHandlerRef->ChunkSize) * 0.5f));
-
-	RefreshCollision(blockSize, chunkElementCount);
+	
+	RefreshCollisionV2(blockSize, chunkElementCount);
 }
 
 void AChunkActor::RefreshCollision(int32 blockSize, int32 chunkElementCount)
@@ -145,6 +145,132 @@ void AChunkActor::RefreshCollision(int32 blockSize, int32 chunkElementCount)
 		}
 	}
 
+	GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Orange, FString::Printf(TEXT("Verts: %i"), VerticesTerrain.Num()));
+	GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Green, FString::Printf(TEXT("Tris: %i"), TrianglesTerrain.Num()));
+
+
+	ProceduralTerrainCollisionMesh->CreateMeshSection(0, VerticesTerrain, TrianglesTerrain, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), true);
+}
+
+void AChunkActor::RefreshCollisionV2(int32 blockSize, int32 chunkElementCount)
+{
+	VerticesTerrain.Empty();
+	TrianglesTerrain.Empty();
+
+	//ProceduralTerrainCollisionMesh->ClearAllMeshSections();
+
+	int32 i = 0;
+	int32 zFirst;
+	int32 zLast;
+
+	for (int32 x = 0; x < chunkElementCount; x++)
+	{
+		zFirst = -1;
+
+		for (int32 z = 0; z < chunkElementCount; z++)
+		{
+			if ((zFirst < 0) && (ChunkData.bHasCollision[x + (chunkElementCount * z)] == 1))
+			{
+				zFirst = z;
+			}
+			//if ((zFirst >= 0) && ((ChunkData.bHasCollision[x + (chunkElementCount * z)] == 0)) || (z == (chunkElementCount - 1)))
+			if (zFirst >= 0)
+			{
+				if (ChunkData.bHasCollision[x + (chunkElementCount * z)] == 0)
+				{
+					zLast = z - 1;
+
+					// Add vertices to the desired block corners
+					VerticesTerrain.Add(FVector(blockSize * x, -50, -blockSize * zFirst));
+					VerticesTerrain.Add(FVector(blockSize * (x + 1), -50, -blockSize * zFirst));
+					VerticesTerrain.Add(FVector(blockSize * (x + 1), -50, -blockSize * (zLast + 1)));
+					VerticesTerrain.Add(FVector(blockSize * x, -50, -blockSize * (zLast + 1)));
+					VerticesTerrain.Add(FVector(blockSize * x, +100, -blockSize * zFirst));
+					VerticesTerrain.Add(FVector(blockSize * (x + 1), +100, -blockSize * zFirst));
+					VerticesTerrain.Add(FVector(blockSize * (x + 1), +100, -blockSize * (zLast + 1)));
+					VerticesTerrain.Add(FVector(blockSize * x, +100, -blockSize * (zLast + 1)));
+
+					// Make collision triangles from points
+					TrianglesTerrain.Add(i + 0);
+					TrianglesTerrain.Add(i + 4);
+					TrianglesTerrain.Add(i + 5);
+					TrianglesTerrain.Add(i + 5);
+					TrianglesTerrain.Add(i + 1);
+					TrianglesTerrain.Add(i + 0);
+					TrianglesTerrain.Add(i + 1);
+					TrianglesTerrain.Add(i + 5);
+					TrianglesTerrain.Add(i + 2);
+					TrianglesTerrain.Add(i + 2);
+					TrianglesTerrain.Add(i + 5);
+					TrianglesTerrain.Add(i + 6);
+					TrianglesTerrain.Add(i + 3);
+					TrianglesTerrain.Add(i + 2);
+					TrianglesTerrain.Add(i + 7);
+					TrianglesTerrain.Add(i + 7);
+					TrianglesTerrain.Add(i + 2);
+					TrianglesTerrain.Add(i + 6);
+					TrianglesTerrain.Add(i + 0);
+					TrianglesTerrain.Add(i + 3);
+					TrianglesTerrain.Add(i + 4);
+					TrianglesTerrain.Add(i + 4);
+					TrianglesTerrain.Add(i + 3);
+					TrianglesTerrain.Add(i + 7);
+
+					i += 8;
+
+					zFirst = -1;
+				}
+				else if (z == (chunkElementCount - 1))
+				{
+					zLast = z;
+
+					// Add vertices to the desired block corners
+					VerticesTerrain.Add(FVector(blockSize * x, -50, -blockSize * zFirst));
+					VerticesTerrain.Add(FVector(blockSize * (x + 1), -50, -blockSize * zFirst));
+					VerticesTerrain.Add(FVector(blockSize * (x + 1), -50, -blockSize * (zLast + 1)));
+					VerticesTerrain.Add(FVector(blockSize * x, -50, -blockSize * (zLast + 1)));
+					VerticesTerrain.Add(FVector(blockSize * x, +100, -blockSize * zFirst));
+					VerticesTerrain.Add(FVector(blockSize * (x + 1), +100, -blockSize * zFirst));
+					VerticesTerrain.Add(FVector(blockSize * (x + 1), +100, -blockSize * (zLast + 1)));
+					VerticesTerrain.Add(FVector(blockSize * x, +100, -blockSize * (zLast + 1)));
+
+					// Make collision triangles from points
+					TrianglesTerrain.Add(i + 0);
+					TrianglesTerrain.Add(i + 4);
+					TrianglesTerrain.Add(i + 5);
+					TrianglesTerrain.Add(i + 5);
+					TrianglesTerrain.Add(i + 1);
+					TrianglesTerrain.Add(i + 0);
+					TrianglesTerrain.Add(i + 1);
+					TrianglesTerrain.Add(i + 5);
+					TrianglesTerrain.Add(i + 2);
+					TrianglesTerrain.Add(i + 2);
+					TrianglesTerrain.Add(i + 5);
+					TrianglesTerrain.Add(i + 6);
+					TrianglesTerrain.Add(i + 3);
+					TrianglesTerrain.Add(i + 2);
+					TrianglesTerrain.Add(i + 7);
+					TrianglesTerrain.Add(i + 7);
+					TrianglesTerrain.Add(i + 2);
+					TrianglesTerrain.Add(i + 6);
+					TrianglesTerrain.Add(i + 0);
+					TrianglesTerrain.Add(i + 3);
+					TrianglesTerrain.Add(i + 4);
+					TrianglesTerrain.Add(i + 4);
+					TrianglesTerrain.Add(i + 3);
+					TrianglesTerrain.Add(i + 7);
+
+					i += 8;
+
+					zFirst = -1;
+				}
+			}
+		}
+	}
+
+	/*GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Orange, FString::Printf(TEXT("Verts: %i"), VerticesTerrain.Num() ));
+	GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Green, FString::Printf(TEXT("Tris: %i"), TrianglesTerrain.Num() ));
+	*/
 	ProceduralTerrainCollisionMesh->CreateMeshSection(0, VerticesTerrain, TrianglesTerrain, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), true);
 }
 
@@ -162,7 +288,7 @@ void AChunkActor::ModifyBlock(FVector HitLocation, int32 DesiredBlockID)
 
 	ChunkData.BlockTextureID[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 336;  //DesiredBlockID;
 	ChunkData.bHasCollision[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 1;
-	RefreshCollision(blockSize, WorldHandlerRef->ChunkElementCount);
+	RefreshCollisionV2(blockSize, WorldHandlerRef->ChunkElementCount);
 
 	TileMapComponent->SetTile(BlockToChangeX, BlockToChangeZ, 0, LocalTileInfo);
 }

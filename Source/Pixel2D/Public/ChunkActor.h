@@ -68,6 +68,9 @@ public:
 	UFUNCTION()
 	void RefreshCollision(int32 blockSize, int32 chunkElementCount);
 
+	UFUNCTION()
+	void RefreshCollisionV2(int32 blockSize, int32 chunkElementCount);
+
 	void ModifyBlock(FVector HitLocation, int32 DesiredBlockID);
 
 private:

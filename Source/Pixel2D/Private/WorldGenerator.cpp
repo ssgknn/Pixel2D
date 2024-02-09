@@ -29,7 +29,7 @@ void UWorldGenerator::GenerateWorld(int32 ChunkElementCount)
 				for (int32 z = 0; z < ChunkElementCount; z++)
 				{
 					//blockCoordsInChunk.Add(FUint32Vector2(x, z));
-					if (GlobalZ > 0)
+					if ( GlobalZ > 0 )
 					{
 						blockTextureID.Add(5);
 						bCollisionValue.Add(0);
@@ -46,8 +46,17 @@ void UWorldGenerator::GenerateWorld(int32 ChunkElementCount)
 					}*/
 					else if (GlobalZ <= 0)
 					{
-						blockTextureID.Add(176);
-						bCollisionValue.Add(1);
+						/*if ( FMath::RandRange(0, 100) < 90 )
+						{*/
+							blockTextureID.Add(176);
+							bCollisionValue.Add(1);
+						/*}
+						else
+						{
+							blockTextureID.Add(5);
+							bCollisionValue.Add(0);
+						}*/
+						
 					}
 				}
 			}
