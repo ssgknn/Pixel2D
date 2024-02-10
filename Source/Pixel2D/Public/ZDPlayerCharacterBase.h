@@ -23,6 +23,8 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
+
+#pragma region Input
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
@@ -39,8 +41,12 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* PrimaryClickAction;
 
-	/*UPROPERTY()
-	class AWorldHandler* WorldHandlerReference;*/
+	/** Open/Close the inventory */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* InventoryAction;
+
+#pragma endregion Input
+
 
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterRotation)
@@ -54,8 +60,8 @@ public:
 	AZDPlayerCharacterBase();
 
 	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
 
@@ -69,5 +75,8 @@ protected:
 
 	/** Called for Clicking input */
 	void PrimaryClick(const FInputActionValue& Value);
+
+	/** Called for Inventory open/close input */
+	void InventoryOpenClose(const FInputActionValue& Value);
 
 };

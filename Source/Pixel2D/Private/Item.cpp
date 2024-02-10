@@ -78,7 +78,7 @@ bool UItem::ShouldShowInInventory() const
 	return true;
 }
 
-void UItem::Use(class ASurvivalCharacter* Character)
+void UItem::Use(class AZDPlayerCharacterBase* Character)
 {
 
 }

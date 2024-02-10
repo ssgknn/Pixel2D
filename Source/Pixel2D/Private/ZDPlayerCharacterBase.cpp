@@ -7,11 +7,11 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
 #include "PaperTileMapComponent.h"
 #include "PaperTileMap.h"
@@ -68,8 +68,8 @@ void AZDPlayerCharacterBase::BeginPlay()
 			WorldHandlerReference = Cast<AWorldHandler>(FoundActors[0]);
 		}*/
 
-		//Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+		// Add Input Mapping Context
+	if (APlayerController* PlayerController = Cast<APlayerController>(this))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -91,8 +91,30 @@ void AZDPlayerCharacterBase::BeginPlay()
 		PlayerController->SetInputMode(InputMode);*/
 
 	}
+	
 	//GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase"));
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
+}
+
+void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	// Set up action bindings
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(this)) {
+
+		//Jumping
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
+		//Moving
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::Move);
+
+		//Click event
+		EnhancedInputComponent->BindAction(PrimaryClickAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::PrimaryClick);
+
+		//Click event
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::InventoryOpenClose);
+
+	}
 }
 
 void AZDPlayerCharacterBase::Tick(float DeltaTime)
@@ -103,24 +125,6 @@ void AZDPlayerCharacterBase::Tick(float DeltaTime)
 	float velocity = GetCharacterMovement()->Velocity.Z;
 	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));
 	*/
-}
-
-void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
-
-		//Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		//Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::Move);
-
-		//Moving
-		EnhancedInputComponent->BindAction(PrimaryClickAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::PrimaryClick);
-
-	}
 }
 
 void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
@@ -194,6 +198,10 @@ void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 			}
 		}
 	}
+}
+
+void AZDPlayerCharacterBase::InventoryOpenClose(const FInputActionValue& Value)
+{
 }
 
 

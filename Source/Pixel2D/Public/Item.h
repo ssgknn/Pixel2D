@@ -114,9 +114,9 @@ public:
 	virtual bool ShouldShowInInventory() const;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnUse(class ASurvivalCharacter* Character);
+	void OnUse(class AZDPlayerCharacterBase* Character);
 
-	virtual void Use(class ASurvivalCharacter* Character);
+	virtual void Use(class AZDPlayerCharacterBase* Character);
 	virtual void AddedToInventory(class UInventoryComponent* Inventory);
 
 	/**Mark the object as needing replication. We must call this internally after modifying any replicated properties*/
