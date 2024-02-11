@@ -13,5 +13,10 @@ UCLASS()
 class PIXEL2D_API UItemTooltip : public UUserWidget
 {
 	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Tooltip", meta = (ExposeOnSpawn = true))
+	class UInventoryItemWidget* InventoryItemWidget;
 	
 };
