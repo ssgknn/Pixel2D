@@ -15,6 +15,7 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 {
 	GENERATED_BODY()
 
+public:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
@@ -23,7 +24,11 @@ class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
+	/**Our players inventory*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	class UInventoryComponent* PlayerInventory;
 
+private:
 #pragma region Input
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -55,6 +60,29 @@ public:
 	void OnRep_CharacterRotation();
 	UFUNCTION(Server, unreliable)
 	void Server_SetCharacterRotation(uint8 NewRotation);
+
+	//Items
+
+	UFUNCTION(BlueprintCallable, Category = "Items")
+	void UseItem(class UItem* Item);
+
+	/**[Server] Use an item from our inventory.*/
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_UseItem(class UItem* Item);
+
+	/**[Server] Drop an item*/
+	UFUNCTION(BlueprintCallable, Category = "Items")
+	void DropItem(class UItem* Item, const int32 Quantity);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_DropItem(class UItem* Item, const int32 Quantity);
+
+	UFUNCTION()
+	void ItemAddedToInventory(class UItem* Item);
+
+	UFUNCTION()
+	void ItemRemovedFromInventory(class UItem* Item);
+
 
 public:
 	AZDPlayerCharacterBase();

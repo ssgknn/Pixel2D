@@ -17,6 +17,8 @@
 #include "PaperTileMap.h"
 #include "Net/UnrealNetwork.h"
 
+#include "Item.h"
+#include "InventoryComponent.h"
 #include "WorldHandler.h"
 #include "ChunkActor.h"
 
@@ -36,6 +38,13 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	//CameraBoom->bInheritYaw = false;
 	//CameraBoom->bInheritRoll = false;
 
+
+	//Give the player an inventory with 20 slots, and an 80kg capacity
+	PlayerInventory = CreateDefaultSubobject<UInventoryComponent>("PlayerInventory");
+	PlayerInventory->SetCapacity(20);
+	PlayerInventory->SetWeightCapacity(80.f);
+	PlayerInventory->OnItemAdded.AddDynamic(this, &AZDPlayerCharacterBase::ItemAddedToInventory);
+	PlayerInventory->OnItemRemoved.AddDynamic(this, &AZDPlayerCharacterBase::ItemRemovedFromInventory);
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -222,6 +231,73 @@ void AZDPlayerCharacterBase::OnRep_CharacterRotation()
 	}
 }
 
+void AZDPlayerCharacterBase::UseItem(UItem* Item)
+{
+	if (!HasAuthority() && Item)
+	{
+		Server_UseItem(Item);
+	}
+
+	if (HasAuthority())
+	{
+		if (PlayerInventory && !PlayerInventory->FindItem(Item))
+		{
+			return;
+		}
+	}
+
+	if (Item)
+	{
+		Item->OnUse(this);
+		Item->Use(this);
+	}
+}
+
+void AZDPlayerCharacterBase::DropItem(UItem* Item, const int32 Quantity)
+{
+	if (PlayerInventory && Item && PlayerInventory->FindItem(Item))
+	{
+		if (!HasAuthority())
+		{
+			Server_DropItem(Item, Quantity);
+			return;
+		}
+
+		if (HasAuthority())
+		{
+			const int32 ItemQuantity = Item->GetQuantity();
+			const int32 DroppedQuantity = PlayerInventory->ConsumeItem(Item, Quantity);
+
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.bNoFail = true;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+			FVector SpawnLocation = GetActorLocation();
+			SpawnLocation.Z -= GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+			FTransform SpawnTransform(GetActorRotation(), SpawnLocation);
+
+			// APickup class needed
+			/*ensure(PickupClass);
+
+			if (APickup* Pickup = GetWorld()->SpawnActor<APickup>(PickupClass, SpawnTransform, SpawnParams))
+			{
+				Pickup->InitializePickup(Item->GetClass(), DroppedQuantity);
+			}*/
+		}
+	}
+}
+
+void AZDPlayerCharacterBase::ItemAddedToInventory(UItem* Item)
+{
+}
+
+void AZDPlayerCharacterBase::ItemRemovedFromInventory(UItem* Item)
+{
+}
+
+
 // -------- RPC --------
 //bool AZDPlayerCharacterBase::Server_SetCharacterRotation_Validate(uint8 NewRotation)
 //{
@@ -240,4 +316,24 @@ void AZDPlayerCharacterBase::Server_SetCharacterRotation_Implementation(uint8 Ne
 		// Call OnRep function manually to replicate the change to all clients
 		OnRep_CharacterRotation();
 	}
+}
+
+void AZDPlayerCharacterBase::Server_UseItem_Implementation(class UItem* Item)
+{
+	UseItem(Item);
+}
+
+bool AZDPlayerCharacterBase::Server_UseItem_Validate(class UItem* Item)
+{
+	return true;
+}
+
+void AZDPlayerCharacterBase::Server_DropItem_Implementation(class UItem* Item, const int32 Quantity)
+{
+	DropItem(Item, Quantity);
+}
+
+bool AZDPlayerCharacterBase::Server_DropItem_Validate(class UItem* Item, const int32 Quantity)
+{
+	return true;
 }
