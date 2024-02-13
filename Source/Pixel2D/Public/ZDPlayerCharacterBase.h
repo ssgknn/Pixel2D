@@ -24,7 +24,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
-	/**Our players inventory*/
+	/** A capsule to detect pickups*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	class UCapsuleComponent* PickupCapsuleComponent;
+
+	/** Our players inventory*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	class UInventoryComponent* PlayerInventory;
 
@@ -90,6 +94,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 
 protected:
 

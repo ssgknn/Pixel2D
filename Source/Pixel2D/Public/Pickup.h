@@ -45,6 +45,10 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 
+	UFUNCTION()
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif 
@@ -53,8 +57,15 @@ protected:
 	UFUNCTION()
 	void OnTakePickup(class AZDPlayerCharacterBase* Taker);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
-	class UStaticMeshComponent* PickupMesh;
+	/** A sphere to detect pickups*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	class USphereComponent* PickupSphereComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	class UPaperSpriteComponent* SpriteComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup Visual")
+	class UPaperSprite* PickupSprite;
 
 	/*UPROPERTY(EditDefaultsOnly, Category = "Components")
 	class UInteractionComponent* InteractionComponent;*/

@@ -45,8 +45,11 @@ public:
 	class UWorld* World;
 
 	/**The mesh to display for this items pickup*/
+	/*UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+	class UStaticMesh* PickupMesh;*/
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-	class UStaticMesh* PickupMesh;
+	class UPaperSprite* PickupSprite;
 
 	/**The thumbnail for this item*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")

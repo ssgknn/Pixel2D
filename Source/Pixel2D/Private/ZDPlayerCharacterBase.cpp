@@ -38,7 +38,6 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	//CameraBoom->bInheritYaw = false;
 	//CameraBoom->bInheritRoll = false;
 
-
 	//Give the player an inventory with 20 slots, and an 80kg capacity
 	PlayerInventory = CreateDefaultSubobject<UInventoryComponent>("PlayerInventory");
 	PlayerInventory->SetCapacity(20);
@@ -50,6 +49,11 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	PickupCapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("PickupCapsuleComponent"));
+	PickupCapsuleComponent->SetupAttachment(RootComponent);
+	//PickupCapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	PickupCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	//GetSprite()->SetIsReplicated(true); // Enable replication to SpriteComponent
 	SetReplicateMovement(true);

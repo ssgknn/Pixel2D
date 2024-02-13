@@ -4,6 +4,8 @@
 #include "Pickup.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/ActorChannel.h"
+#include "Components/SphereComponent.h"
+#include "PaperSpriteComponent.h"
 
 #include "Item.h"
 #include "InventoryComponent.h"
@@ -14,7 +16,16 @@
 APickup::APickup()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 
+	PickupSphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphereComponent"));
+	PickupSphereComponent->SetupAttachment(RootComponent);
+	PickupSphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	PickupSphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Create sprite component
+	SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("PickupSpriteComponent"));
+	SpriteComponent->SetupAttachment(RootComponent);
 }
 
 void APickup::InitializePickup(const TSubclassOf<class UItem> ItemClass, const int32 Quantity)
@@ -39,7 +50,13 @@ void APickup::BeginPlay()
 	if (HasAuthority() && ItemTemplate && bNetStartup)
 	{
 		InitializePickup(ItemTemplate->GetClass(), ItemTemplate->GetQuantity());
+
+		PickupSphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		PickupSphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+		PickupSphereComponent->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
+	
 	}
+
 
 	/**If pickup was spawned in at runtime, ensure that it matches the rotation of the ground that it was dropped on
 	If we dropped a pickup on a 20 degree slope, the pickup would also be spawned at a 20 degree angle*/
@@ -52,7 +69,6 @@ void APickup::BeginPlay()
 	{
 		Item->MarkDirtyForReplication();
 	}
-
 }
 
 void APickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -67,8 +83,9 @@ void APickup::OnRep_Item()
 {
 	if (Item)
 	{
-		PickupMesh->SetStaticMesh(Item->PickupMesh);
+		//PickupMesh->SetStaticMesh(Item->PickupMesh);
 		//InteractionComponent->InteractableNameText = Item->DisplayName;
+		SpriteComponent->SetSprite(PickupSprite);
 
 		//Clients bind to this delegate in order to refresh the interaction widget if item quantity changes
 		Item->OnItemModified.AddDynamic(this, &APickup::OnItemModified);
@@ -99,6 +116,16 @@ bool APickup::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch*
 	return bWroteSomething;
 }
 
+void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	AZDPlayerCharacterBase* PlayerCharacterActor = Cast<AZDPlayerCharacterBase>(OtherActor);
+
+	if (PlayerCharacterActor)
+	{
+		OnTakePickup(PlayerCharacterActor);
+	}
+}
+
 #if WITH_EDITOR
 void APickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -111,7 +138,8 @@ void APickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent
 	{
 		if (ItemTemplate)
 		{
-			PickupMesh->SetStaticMesh(ItemTemplate->PickupMesh);
+			//PickupMesh->SetStaticMesh(ItemTemplate->PickupMesh);
+			PickupSprite = ItemTemplate->PickupSprite;
 		}
 	}
 }
