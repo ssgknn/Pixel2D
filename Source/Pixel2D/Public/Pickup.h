@@ -61,11 +61,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	class USphereComponent* PickupSphereComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	UPROPERTY()
 	class UPaperSpriteComponent* SpriteComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup Visual")
-	class UPaperSprite* PickupSprite;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	class UPaperSprite* PickupSprite;*/
 
 	/*UPROPERTY(EditDefaultsOnly, Category = "Components")
 	class UInteractionComponent* InteractionComponent;*/

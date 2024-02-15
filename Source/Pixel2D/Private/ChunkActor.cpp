@@ -35,7 +35,9 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	
 	ProceduralTerrainCollisionMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("TerrainCollisionMesh"));
 	ProceduralTerrainCollisionMesh->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	ProceduralTerrainCollisionMesh->SetVisibility(false);
+	ProceduralTerrainCollisionMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	ProceduralTerrainCollisionMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	ProceduralTerrainCollisionMesh->SetVisibility(true);
 
 
 	// Initialize TileSets
@@ -276,6 +278,7 @@ void AChunkActor::RefreshCollisionV2(int32 blockSize, int32 chunkElementCount)
 		}
 	}
 
+	ProceduralTerrainCollisionMesh->ClearMeshSection(0);
 	/*GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Orange, FString::Printf(TEXT("Verts: %i"), VerticesTerrain.Num() ));
 	GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Green, FString::Printf(TEXT("Tris: %i"), TrianglesTerrain.Num() ));
 	*/
@@ -289,14 +292,14 @@ void AChunkActor::ModifyBlock(FVector HitLocation, int32 DesiredBlockID)
 
 	FPaperTileInfo LocalTileInfo;
 	LocalTileInfo.TileSet = TileSet0;
-	LocalTileInfo.PackedTileIndex = 336; // DesiredBlockID;
+	LocalTileInfo.PackedTileIndex = 5; //336 - brick, 5 - air // DesiredBlockID;
 
 	int32 BlockToChangeX = FMath::Floor(HitLocation.X / blockSize);
 	int32 BlockToChangeZ = FMath::Floor(HitLocation.Z / blockSize);
 
-	ChunkData.BlockTextureID[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 336;  //DesiredBlockID;
-	ChunkData.bHasCollision[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 1;
-	RefreshCollisionV2(blockSize, WorldHandlerRef->ChunkElementCount);
+	ChunkData.BlockTextureID[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 5; //DesiredBlockID;
+	ChunkData.bHasCollision[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 0;
+	RefreshCollisionV2(blockSize, chunkElementCount);
 
 	TileMapComponent->SetTile(BlockToChangeX, BlockToChangeZ, 0, LocalTileInfo);
 

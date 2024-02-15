@@ -17,15 +17,31 @@ APickup::APickup()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
+	SetRootComponent(RootComponent);
 
 	PickupSphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphereComponent"));
 	PickupSphereComponent->SetupAttachment(RootComponent);
-	PickupSphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	PickupSphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	PickupSphereComponent->SetCollisionProfileName("Custom");
+
+	// Configure collision settings
+	PickupSphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	PickupSphereComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1); // PickupChannel
+	PickupSphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block); // Block all channels
+	PickupSphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	PickupSphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap); // Overlap with pickups
+	PickupSphereComponent->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
+	PickupSphereComponent->SetSimulatePhysics(true);
+
+	// Lock movement in the Y (vertical) axis
+	//PickupSphereComponent->SetConstraintMode(EDOFMode::SixDOF); // Enable constraints
+	//PickupSphereComponent->SetLinearXMotion(EComponentMotionSource::Type::Locked); // Lock movement in X axis
+	//PickupSphereComponent->SetLinearYMotion(EComponentMotionSource::Type::Locked); // Lock movement in Y axis
+	//PickupSphereComponent->SetLinearZMotion(EComponentMotionSource::Type::Free); // Allow movement in Z axis
 
 	// Create sprite component
 	SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("PickupSpriteComponent"));
-	SpriteComponent->SetupAttachment(RootComponent);
+	SpriteComponent->SetupAttachment(PickupSphereComponent);
 }
 
 void APickup::InitializePickup(const TSubclassOf<class UItem> ItemClass, const int32 Quantity)
@@ -46,15 +62,11 @@ void APickup::InitializePickup(const TSubclassOf<class UItem> ItemClass, const i
 void APickup::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	if (HasAuthority() && ItemTemplate && bNetStartup)
+
+	if (HasAuthority() && ItemTemplate /* && bNetStartup*/)
 	{
 		InitializePickup(ItemTemplate->GetClass(), ItemTemplate->GetQuantity());
 
-		PickupSphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		PickupSphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-		PickupSphereComponent->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
-	
 	}
 
 
@@ -85,7 +97,7 @@ void APickup::OnRep_Item()
 	{
 		//PickupMesh->SetStaticMesh(Item->PickupMesh);
 		//InteractionComponent->InteractableNameText = Item->DisplayName;
-		SpriteComponent->SetSprite(PickupSprite);
+		SpriteComponent->SetSprite(Item->PickupSprite);
 
 		//Clients bind to this delegate in order to refresh the interaction widget if item quantity changes
 		Item->OnItemModified.AddDynamic(this, &APickup::OnItemModified);
@@ -118,11 +130,15 @@ bool APickup::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch*
 
 void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	AZDPlayerCharacterBase* PlayerCharacterActor = Cast<AZDPlayerCharacterBase>(OtherActor);
-
-	if (PlayerCharacterActor)
+	if (AZDPlayerCharacterBase* PlayerCharacterActor = Cast<AZDPlayerCharacterBase>(OtherActor))
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Pickup::OnSphereOverlap"));
 		OnTakePickup(PlayerCharacterActor);
+	}
+	if (APickup* OtherPickup = Cast<APickup>(OtherActor))
+	{
+		Item->SetQuantity(Item->GetQuantity() + OtherPickup->Item->GetQuantity());
+		OtherPickup->Destroy();
 	}
 }
 
@@ -139,7 +155,7 @@ void APickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent
 		if (ItemTemplate)
 		{
 			//PickupMesh->SetStaticMesh(ItemTemplate->PickupMesh);
-			PickupSprite = ItemTemplate->PickupSprite;
+			//PickupSprite = ItemTemplate->PickupSprite;
 		}
 	}
 }
