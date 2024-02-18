@@ -255,16 +255,10 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 					const int32 QuantityMaxAddAmount = FMath::Min(Item->MaxStackSize, Item->GetQuantity());
 					const int32 AddAmount = FMath::Min(WeightMaxAddAmount, QuantityMaxAddAmount);
 
-					if (AddAmount < Item->GetQuantity())
-					{
-						AddItem(Item, AddAmount);
-						Item->SetQuantity(Item->GetQuantity() - AddAmount);
-					}
-					else
-					{
-						AddItem(Item, AddAmount);
-						return AddAmount >= Item->GetQuantity() ? FItemAddResult::AddedAll(Item->GetQuantity()) : FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
-					}
+					AddItem(Item, AddAmount);
+
+					return AddAmount >= Item->GetQuantity() ? FItemAddResult::AddedAll(Item->GetQuantity()) : FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
+				
 				}
 				else
 				{
