@@ -15,8 +15,8 @@ class PIXEL2D_API AChunkActor : public AActor
 public:
 	friend class AWorldHandler;
 
-	UPROPERTY(EditAnywhere, Category = "Componens")
-	class UTextRenderComponent* TextComponent;
+	/*UPROPERTY(EditAnywhere, Category = "Componens")
+	class UTextRenderComponent* TextComponent;*/
 
 #pragma region Tilesets
 

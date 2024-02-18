@@ -25,8 +25,8 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	TileMapComponent = CreateDefaultSubobject<UPaperTileMapComponent>(TEXT("TileMap"));
 	TileMapComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
-	TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComp"));
-	TextComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	//TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComp"));
+	//TextComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 	CollisionBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -37,7 +37,7 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	ProceduralTerrainCollisionMesh->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
 	ProceduralTerrainCollisionMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	ProceduralTerrainCollisionMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	ProceduralTerrainCollisionMesh->SetVisibility(true);
+	ProceduralTerrainCollisionMesh->SetVisibility(false);
 
 
 	// Initialize TileSets
@@ -68,8 +68,8 @@ void AChunkActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 void AChunkActor::LoadChunk()
 {
 
-	TextComponent->AddRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
-	TextComponent->AddRelativeLocation(FVector(0.0f, 1.0f, 0.0f));
+	//TextComponent->AddRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
+	//TextComponent->AddRelativeLocation(FVector(0.0f, 1.0f, 0.0f));
 
 	int32 blockSize = WorldHandlerRef->BlockSize;
 	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
@@ -303,7 +303,7 @@ void AChunkActor::ModifyBlock(FVector HitLocation, int32 DesiredBlockID)
 
 	TileMapComponent->SetTile(BlockToChangeX, BlockToChangeZ, 0, LocalTileInfo);
 
-	Server_SetChunkData(HitLocation, DesiredBlockID);
+	//Server_SetChunkData(HitLocation, DesiredBlockID);
 }
 
 //TArray<int32> AChunkActor::GetBlockTextureIDByChunkCoordinate(const FIntPoint& TargetChunkCoordinate)

@@ -108,7 +108,7 @@ void AWorldHandler::AddChunks()
 				SpawnedActor->LoadChunk();
 
 				FString FormattedText = FString::Printf(TEXT("(X%i, Y%i)"), ChunkCoordX, ChunkCoordZ);
-				SpawnedActor->TextComponent->SetText(FText::FromString(FormattedText));
+				//SpawnedActor->TextComponent->SetText(FText::FromString(FormattedText));
 				ChunksArray.Add(SpawnedActor);
 			}
 		}

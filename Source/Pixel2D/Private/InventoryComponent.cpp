@@ -259,6 +259,7 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 					{
 						AddItem(Item, AddAmount);
 						Item->SetQuantity(Item->GetQuantity() - AddAmount);
+						TryAddItem_Internal(Item);
 					}
 					else
 					{
