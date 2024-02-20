@@ -65,8 +65,7 @@ public:
 	UFUNCTION(Server, unreliable)
 	void Server_SetCharacterRotation(uint8 NewRotation);
 
-	//Items
-
+	// Items
 	UFUNCTION(BlueprintCallable, Category = "Items")
 	void UseItem(class UItem* Item);
 
@@ -87,6 +86,9 @@ public:
 	UFUNCTION()
 	void ItemRemovedFromInventory(class UItem* Item);
 
+	/**needed this because the pickups use a blueprint base class*/
+	UPROPERTY(EditDefaultsOnly, Category = "Item")
+	TSubclassOf<class APickup> PickupClass;
 
 public:
 	AZDPlayerCharacterBase();

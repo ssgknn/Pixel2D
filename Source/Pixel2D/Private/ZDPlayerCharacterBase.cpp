@@ -17,6 +17,7 @@
 #include "PaperTileMap.h"
 #include "Net/UnrealNetwork.h"
 
+#include "Pickup.h"
 #include "Item.h"
 #include "InventoryComponent.h"
 #include "WorldHandler.h"
@@ -282,13 +283,12 @@ void AZDPlayerCharacterBase::DropItem(UItem* Item, const int32 Quantity)
 
 			FTransform SpawnTransform(GetActorRotation(), SpawnLocation);
 
-			// APickup class needed
-			/*ensure(PickupClass);
+			ensure(PickupClass);
 
 			if (APickup* Pickup = GetWorld()->SpawnActor<APickup>(PickupClass, SpawnTransform, SpawnParams))
 			{
 				Pickup->InitializePickup(Item->GetClass(), DroppedQuantity);
-			}*/
+			}
 		}
 	}
 }
