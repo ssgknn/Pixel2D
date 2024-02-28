@@ -253,6 +253,7 @@ void AZDPlayerCharacterBase::UseItem(UItem* Item)
 
 	if (Item)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase::UseItem()"));
 		Item->OnUse(this);
 		Item->Use(this);
 	}
