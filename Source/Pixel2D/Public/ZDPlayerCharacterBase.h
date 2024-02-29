@@ -73,10 +73,10 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_UseItem(class UItem* Item);
 
-	/**[Server] Drop an item*/
 	UFUNCTION(BlueprintCallable, Category = "Items")
 	void DropItem(class UItem* Item, const int32 Quantity);
 
+	/**[Server] Drop an item*/
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_DropItem(class UItem* Item, const int32 Quantity);
 

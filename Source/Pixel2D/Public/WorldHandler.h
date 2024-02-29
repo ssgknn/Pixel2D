@@ -19,7 +19,7 @@ public:
 #pragma region DataVariables
 
 	// ChunkDATA
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	TArray<FChunkData> WorldDATA;
 
 	// Chunk
@@ -99,6 +99,14 @@ public:
 
 	UFUNCTION()
 	uint8 IsChunkExists(const int32 X, const int32 Y);
+
+
+	//UFUNCTION(BlueprintCallable, Category = "Items")
+	//void SpawnPickup(class UItem* Item, const int32 Quantity);
+
+	///**[Server] Drop an item*/
+	//UFUNCTION(Server, Reliable, WithValidation)
+	//void Server_SpawnPickup(class UItem* Item, const int32 Quantity);
 
 private:
 	void InitializeData();

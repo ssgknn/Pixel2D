@@ -280,11 +280,13 @@ void AZDPlayerCharacterBase::DropItem(UItem* Item, const int32 Quantity)
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 			FVector SpawnLocation = GetActorLocation();
-			SpawnLocation.Z -= GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+			CharacterRotation ? SpawnLocation.X -= 50 : SpawnLocation.X += 50;
+			//SpawnLocation.Z -= GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 
-			FTransform SpawnTransform(GetActorRotation(), SpawnLocation);
+			//FTransform SpawnTransform(GetActorRotation(), SpawnLocation);
+			FTransform SpawnTransform(FRotator(0.0f, 0.0f, 0.0f), SpawnLocation);
 
-			ensure(PickupClass);
+			//ensure(PickupClass);
 
 			if (APickup* Pickup = GetWorld()->SpawnActor<APickup>(PickupClass, SpawnTransform, SpawnParams))
 			{
