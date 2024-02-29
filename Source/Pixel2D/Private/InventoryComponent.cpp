@@ -259,7 +259,7 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 					{
 						AddItem(Item, AddAmount);
 						Item->SetQuantity(Item->GetQuantity() - AddAmount);
-						TryAddItem_Internal(Item);
+						return FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
 					}
 					else
 					{
@@ -282,7 +282,16 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 					else
 					{
 						ExistingItem->SetQuantity(ExistingItem->GetQuantity() + AddAmount);
-						return AddAmount >= Item->GetQuantity() ? FItemAddResult::AddedAll(Item->GetQuantity()) : FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
+						if (Item->GetQuantity() - AddAmount == 0)
+						{
+							return AddAmount >= Item->GetQuantity() ? FItemAddResult::AddedAll(Item->GetQuantity()) : FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
+
+						}
+						else
+						{
+							AddItem(Item, (Item->GetQuantity() - AddAmount));
+							return FItemAddResult::AddedAll(Item->GetQuantity());
+						}
 					}
 				}
 			}

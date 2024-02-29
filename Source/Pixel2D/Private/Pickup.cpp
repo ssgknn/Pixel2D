@@ -182,6 +182,7 @@ void APickup::OnTakePickup(class AZDPlayerCharacterBase* Taker)
 			}
 			else if (AddResult.AmountGiven >= Item->GetQuantity())
 			{
+				Item->SetQuantity(0);
 				Destroy();
 			}
 
