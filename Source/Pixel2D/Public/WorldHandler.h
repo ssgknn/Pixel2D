@@ -101,12 +101,12 @@ public:
 	uint8 IsChunkExists(const int32 X, const int32 Y);
 
 
-	//UFUNCTION(BlueprintCallable, Category = "Items")
-	//void SpawnPickup(class UItem* Item, const int32 Quantity);
+	UFUNCTION(BlueprintCallable, Category = "Items")
+	void SpawnPickup(FPickupData PickupData);
 
-	///**[Server] Drop an item*/
-	//UFUNCTION(Server, Reliable, WithValidation)
-	//void Server_SpawnPickup(class UItem* Item, const int32 Quantity);
+	/**[Server] Spawn a Pickup*/
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_SpawnPickup(FPickupData PickupData);
 
 private:
 	void InitializeData();

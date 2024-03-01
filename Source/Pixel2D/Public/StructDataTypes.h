@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Pickup.h"
+#include "Item.h"
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
@@ -30,7 +31,7 @@ struct PIXEL2D_API FChunkData
 	FIntPoint ChunkCoordinate;
 	TArray<int32> BlockTextureID;
 	TArray<uint8> bHasCollision;
-	TArray<APickup*> Pickups;
+	TArray<FPickupData> Pickups;
 };
 
 /**
@@ -42,7 +43,7 @@ struct PIXEL2D_API FPickupData
 	GENERATED_USTRUCT_BODY()
 
 	TSubclassOf<class APickup> PickupType;
-	int32 Quantity;
+	UItem* Item;
 	FVector Location;
 
 };

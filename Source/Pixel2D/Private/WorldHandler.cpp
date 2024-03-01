@@ -7,6 +7,7 @@
 #include "PlayerStatsData.h"
 #include "WorldGenerator.h"
 #include "FileHandler.h"
+#include "Item.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Components/TextRenderComponent.h"
@@ -52,7 +53,6 @@ void AWorldHandler::InitializeData()
 	CenterChunkCoords = FIntPoint(0, 0);
 	bFirstLaunch = 1;
 
-	
 
 	//Calculated data to initialize
 	ChunkSize = ChunkElementCount * BlockSize;
@@ -107,6 +107,14 @@ void AWorldHandler::AddChunks()
 				SpawnedActor->SetFChunkData(*FoundChunkData);
 				SpawnedActor->LoadChunk();
 
+				if (FoundChunkData->Pickups.Num())
+				{
+					for (int32 i = 0; i < FoundChunkData->Pickups.Num(); i++)
+					{
+						SpawnPickup(FoundChunkData->Pickups[i]);
+					}
+				}
+				
 				FString FormattedText = FString::Printf(TEXT("(X%i, Y%i)"), ChunkCoordX, ChunkCoordZ);
 				//SpawnedActor->TextComponent->SetText(FText::FromString(FormattedText));
 				ChunksArray.Add(SpawnedActor);
@@ -129,6 +137,33 @@ void AWorldHandler::RemoveChunks()
 
 	ActiveChunkCoordinates.Shrink();
 	ChunksArray.Shrink();
+}
+
+void AWorldHandler::SpawnPickup(FPickupData PickupData)
+{
+	if (!HasAuthority())
+	{
+		Server_SpawnPickup(PickupData);
+		return;
+	}
+
+	if (HasAuthority())
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.bNoFail = true;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		//FTransform SpawnTransform(GetActorRotation(), SpawnLocation);
+		FTransform SpawnTransform(FRotator(0.0f, 0.0f, 0.0f), PickupData.Location);
+
+		//ensure(PickupClass);
+
+		if (APickup* Pickup = GetWorld()->SpawnActor<APickup>(PickupData.PickupType, SpawnTransform, SpawnParams))
+		{
+			Pickup->InitializePickup(PickupData.Item->GetClass(), PickupData.Item->GetQuantity());
+		}
+	}
 }
 
 uint8 AWorldHandler::IsChunkExists(const int32 X, const int32 Y)
@@ -194,4 +229,17 @@ FChunkData AWorldHandler::GetFChunkDataByChunkCoordinate(const FIntPoint& Target
 	// You may want to handle this case accordingly (e.g., return an empty array)
 	FChunkData empty;
 	return empty;
+}
+
+// -------- RPC --------
+// 
+
+void AWorldHandler::Server_SpawnPickup_Implementation(FPickupData PickupData)
+{
+	SpawnPickup(PickupData);
+}
+
+bool AWorldHandler::Server_SpawnPickup_Validate(FPickupData PickupData)
+{
+	return true;
 }

@@ -130,18 +130,21 @@ bool APickup::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch*
 
 void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (AZDPlayerCharacterBase* PlayerCharacterActor = Cast<AZDPlayerCharacterBase>(OtherActor))
+	if (HasAuthority())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Pickup::OnSphereOverlap"));
-		OnTakePickup(PlayerCharacterActor);
-	}
-	if (APickup* OtherPickup = Cast<APickup>(OtherActor))
-	{
-		int32 totalQuantity = Item->GetQuantity() + OtherPickup->Item->GetQuantity();
-		if (totalQuantity <= Item->MaxStackSize)
+		if (AZDPlayerCharacterBase* PlayerCharacterActor = Cast<AZDPlayerCharacterBase>(OtherActor))
 		{
-			Item->SetQuantity(totalQuantity);
-			OtherPickup->Destroy();
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Pickup::OnSphereOverlap"));
+			OnTakePickup(PlayerCharacterActor);
+		}
+		if (APickup* OtherPickup = Cast<APickup>(OtherActor))
+		{
+			int32 totalQuantity = Item->GetQuantity() + OtherPickup->Item->GetQuantity();
+			if (totalQuantity <= Item->MaxStackSize)
+			{
+				Item->SetQuantity(totalQuantity);
+				OtherPickup->Destroy();
+			}
 		}
 	}
 }

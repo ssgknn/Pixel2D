@@ -99,9 +99,9 @@ UItem* UInventoryComponent::FindItem(class UItem* Item) const
 {
 	if (Item)
 	{
-		for (auto& InvItem : Items)
+		for (UItem* InvItem : Items)
 		{
-			if (InvItem && InvItem->GetClass() == Item->GetClass() && !InvItem->IsStackFull())
+			if (InvItem && InvItem->GetClass() == Item->GetClass())
 			{
 				return InvItem;
 			}
@@ -238,8 +238,9 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 		{
 			//Somehow the items quantity went over the max stack size. This shouldn't ever happen
 			ensure(Item->GetQuantity() <= Item->MaxStackSize);
+			UItem* ExistingItem = FindItem(Item);
 
-			if (UItem* ExistingItem = FindItem(Item))
+			if (ExistingItem /* && !ExistingItem->IsStackFull()*/)
 			{
 				if (ExistingItem->IsStackFull())
 				{
