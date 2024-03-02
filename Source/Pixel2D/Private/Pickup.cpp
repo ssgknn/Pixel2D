@@ -181,26 +181,30 @@ void APickup::OnTakePickup(class AZDPlayerCharacterBase* Taker)
 	{
 		if (UInventoryComponent* PlayerInventory = Taker->PlayerInventory)
 		{
-			const FItemAddResult AddResult = PlayerInventory->TryAddItem(Item);
+			FItemAddResult AddResult = PlayerInventory->TryAddItem(Item);
 
-			if (AddResult.AmountGiven < Item->GetQuantity())
-			{
-				Item->SetQuantity(Item->GetQuantity() - AddResult.AmountGiven);
-			}
-			else if (AddResult.AmountGiven >= Item->GetQuantity())
+			if (AddResult.Result == EItemAddResult::IAR_AllItemsAdded)
 			{
 				Item->SetQuantity(0);
 				Destroy();
+				return;
 			}
-
-			if (!AddResult.ErrorText.IsEmpty())
+			else if (AddResult.Result == EItemAddResult::IAR_SomeItemsAdded)
 			{
-				if (APixel2DPlayerController* PC = Cast<APixel2DPlayerController>(Taker->GetController()))
+				while (AddResult.Result == EItemAddResult::IAR_SomeItemsAdded)
 				{
-					// need to move controller logic to player controller
-					//PC->ClientShowNotification(AddResult.ErrorText);
+					Item->SetQuantity(Item->GetQuantity() - AddResult.AmountGiven);
+					AddResult = PlayerInventory->TryAddItem(Item);
+				}
+
+				if (AddResult.Result == EItemAddResult::IAR_AllItemsAdded)
+				{
+					Item->SetQuantity(0);
+					Destroy();
+					return;
 				}
 			}
 		}
+
 	}
 }

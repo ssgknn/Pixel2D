@@ -110,6 +110,21 @@ UItem* UInventoryComponent::FindItem(class UItem* Item) const
 	return nullptr;
 }
 
+UItem* UInventoryComponent::FindItemStackNotFull(class UItem* Item) const
+{
+	if (Item)
+	{
+		for (UItem* InvItem : Items)
+		{
+			if (InvItem && InvItem->GetClass() == Item->GetClass() && !InvItem->IsStackFull())
+			{
+				return InvItem;
+			}
+		}
+	}
+	return nullptr;
+}
+
 UItem* UInventoryComponent::FindItemByClass(TSubclassOf<class UItem> ItemClass) const
 {
 	for (auto& InvItem : Items)
@@ -238,61 +253,33 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 		{
 			//Somehow the items quantity went over the max stack size. This shouldn't ever happen
 			ensure(Item->GetQuantity() <= Item->MaxStackSize);
-			UItem* ExistingItem = FindItem(Item);
 
-			if (ExistingItem /* && !ExistingItem->IsStackFull()*/)
+			// enters if we have an item in inventory which is not full
+			if (UItem* ExistingItem = FindItemStackNotFull(Item))
 			{
-				if (ExistingItem->IsStackFull())
+				const int32 WeightMaxAddAmount = FMath::FloorToInt((WeightCapacity - GetCurrentWeight()) / Item->Weight);
+				const int32 QuantityMaxAddAmount = FMath::Min(ExistingItem->MaxStackSize - ExistingItem->GetQuantity(), Item->GetQuantity());
+				const int32 AddAmount = FMath::Min(WeightMaxAddAmount, QuantityMaxAddAmount);
+
+				// enters if we can add all items from pickup to the not full stack
+				if (AddAmount == Item->GetQuantity())
 				{
-					// * MODIFIED *
-					// When stack is full and have free inventory space open a new Stack from same Item
-					//return FItemAddResult::AddedNone(Item->GetQuantity(), FText::Format(LOCTEXT("StackFullText", "Couldn't add {ItemName}. Tried adding items to a stack that was full."), Item->DisplayName));
-					if (Items.Num() + 1 > GetCapacity())
-					{
-						return FItemAddResult::AddedNone(Item->GetQuantity(), FText::Format(LOCTEXT("InventoryCapacityFullText", "Couldn't add {ItemName} to Inventory. Inventory is full."), Item->DisplayName));
-					}
-
-					const int32 WeightMaxAddAmount = FMath::FloorToInt((WeightCapacity - GetCurrentWeight()) / Item->Weight);
-					const int32 QuantityMaxAddAmount = FMath::Min(Item->MaxStackSize, Item->GetQuantity());
-					const int32 AddAmount = FMath::Min(WeightMaxAddAmount, QuantityMaxAddAmount);
-
-					if (AddAmount < Item->GetQuantity())
-					{
-						AddItem(Item, AddAmount);
-						Item->SetQuantity(Item->GetQuantity() - AddAmount);
-						return FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
-					}
-					else
-					{
-						AddItem(Item, AddAmount);
-						return AddAmount >= Item->GetQuantity() ? FItemAddResult::AddedAll(Item->GetQuantity()) : FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
-					}
+					ExistingItem->SetQuantity(ExistingItem->GetQuantity() + AddAmount);
+					return FItemAddResult::AddedAll(Item->GetQuantity());
 				}
 				else
 				{
-					//Find the maximum amount of the item we could take due to weight
-					const int32 WeightMaxAddAmount = FMath::FloorToInt((WeightCapacity - GetCurrentWeight()) / Item->Weight);
-					const int32 QuantityMaxAddAmount = FMath::Min(ExistingItem->MaxStackSize - ExistingItem->GetQuantity(), Item->GetQuantity());
-					const int32 AddAmount = FMath::Min(WeightMaxAddAmount, QuantityMaxAddAmount);
-
-					if (AddAmount <= 0)
-					{
-						//Already did full stack check, must not have enough weight
-						return FItemAddResult::AddedNone(Item->GetQuantity(), FText::Format(LOCTEXT("StackWeightFullText", "Couldn't add {ItemName}, too much weight."), Item->DisplayName));
-					}
-					else
+					// we cant add all the items because the inventory is full, but can fill the last half stack
+					if (Items.Num() + 1 > GetCapacity())
 					{
 						ExistingItem->SetQuantity(ExistingItem->GetQuantity() + AddAmount);
-						if (Item->GetQuantity() - AddAmount == 0)
-						{
-							return AddAmount >= Item->GetQuantity() ? FItemAddResult::AddedAll(Item->GetQuantity()) : FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
-
-						}
-						else
-						{
-							AddItem(Item, (Item->GetQuantity() - AddAmount));
-							return FItemAddResult::AddedAll(Item->GetQuantity());
-						}
+						return FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
+					}
+					else // we can fill the opened stack and have free inventory slot.
+					{
+						ExistingItem->SetQuantity(ExistingItem->GetQuantity() + AddAmount);
+						AddItem(Item, Item->GetQuantity() - AddAmount);
+						return FItemAddResult::AddedAll(Item->GetQuantity());
 					}
 				}
 			}
@@ -308,7 +295,6 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 				const int32 AddAmount = FMath::Min(WeightMaxAddAmount, QuantityMaxAddAmount);
 
 				AddItem(Item, AddAmount);
-
 				return AddAmount >= Item->GetQuantity() ? FItemAddResult::AddedAll(Item->GetQuantity()) : FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
 			}
 		}
@@ -339,7 +325,6 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 
 	//AddItem should never be called on a client
 	return FItemAddResult::AddedNone(-1, LOCTEXT("ErrorMessage", ""));
-
 }
 
 void UInventoryComponent::ItemAdded(class UItem* Item)

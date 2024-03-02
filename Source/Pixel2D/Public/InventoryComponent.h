@@ -124,6 +124,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	UItem* FindItem(class UItem* Item) const;
 
+	/**Return the first item with the same class as a given Item where the stack is not full*/
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	UItem* FindItemStackNotFull(class UItem* Item) const;
+
 	/**Return the first item with the same class as ItemClass.*/
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	UItem* FindItemByClass(TSubclassOf<class UItem> ItemClass) const;
