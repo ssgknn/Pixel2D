@@ -269,18 +269,8 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 				}
 				else
 				{
-					// we cant add all the items because the inventory is full, but can fill the last half stack
-					if (Items.Num() + 1 > GetCapacity())
-					{
-						ExistingItem->SetQuantity(ExistingItem->GetQuantity() + AddAmount);
-						return FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
-					}
-					else // we can fill the opened stack and have free inventory slot.
-					{
-						ExistingItem->SetQuantity(ExistingItem->GetQuantity() + AddAmount);
-						AddItem(Item, Item->GetQuantity() - AddAmount);
-						return FItemAddResult::AddedAll(Item->GetQuantity());
-					}
+					ExistingItem->SetQuantity(ExistingItem->GetQuantity() + AddAmount);
+					return FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
 				}
 			}
 			else //we want to add a stackable item that doesn't exist in the inventory
