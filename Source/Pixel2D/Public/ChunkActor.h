@@ -49,6 +49,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Componens")
 	class UPaperTileMapComponent* TileMapComponent;
 
+	UPROPERTY(VisibleAnywhere)
 	class UProceduralMeshComponent* ProceduralTerrainCollisionMesh;
 
 	UPROPERTY(ReplicatedUsing = OnRep_ChunkDataChanged)
