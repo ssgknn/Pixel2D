@@ -22,6 +22,8 @@
 #include "InventoryComponent.h"
 #include "WorldHandler.h"
 #include "ChunkActor.h"
+#include "EquippableItem.h"
+#include "GearEquippableItem.h"
 
 
 AZDPlayerCharacterBase::AZDPlayerCharacterBase()
@@ -34,10 +36,11 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance
 	CameraBoom->bDoCollisionTest = false; // turn off the camera zoom if object between the player and the camera
 
-	//CameraBoom->bUsePawnControlRotation = false; //set world rotation to the arm instead of relative
-	//CameraBoom->bInheritPitch = false;
-	//CameraBoom->bInheritYaw = false;
-	//CameraBoom->bInheritRoll = false;
+	PlayerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
+	PlayerMesh->SetupAttachment(RootComponent);
+	
+	// Initialize Materials									 C:/GitHub/Pixel2D/Content/2DAssets/CustomizablePixelCharacter/Anim/M_Cloth.uasset
+	//static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialInstanceObject(TEXT("/Game/2DAssets/CustomizablePixelCharacter/Anim/MI_Cloth"));
 
 	//Give the player an inventory with 20 slots, and an 80kg capacity
 	PlayerInventory = CreateDefaultSubobject<UInventoryComponent>("PlayerInventory");
@@ -81,8 +84,11 @@ void AZDPlayerCharacterBase::BeginPlay()
 		{
 			WorldHandlerReference = Cast<AWorldHandler>(FoundActors[0]);
 		}*/
+	ChestMaterial = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(5), nullptr);
+	PlayerMesh->SetMaterial(5, ChestMaterial);
+	PlayerMaterials.Add(EEquippableSlot::EIS_Chest, ChestMaterial);
 
-		// Add Input Mapping Context
+	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -219,6 +225,37 @@ void AZDPlayerCharacterBase::InventoryOpenClose(const FInputActionValue& Value)
 }
 
 
+void AZDPlayerCharacterBase::OnLootSourceOwnerDestroyed(AActor* DestroyedActor)
+{
+	//Remove loot source 
+	if (HasAuthority() && LootSource && DestroyedActor == LootSource->GetOwner())
+	{
+		ServerSetLootSource(nullptr);
+	}
+}
+
+void AZDPlayerCharacterBase::OnRep_LootSource()
+{
+	////Bring up or remove the looting menu 
+	//if (APixel2DPlayerController* PC = Cast<AZDPlayerCharacterBase>(GetController()))
+	//{
+	//	if (PC->IsLocalController())
+	//	{
+	//		if (ASurvivalHUD* HUD = Cast<ASurvivalHUD>(PC->GetHUD()))
+	//		{
+	//			if (LootSource)
+	//			{
+	//				HUD->OpenLootWidget();
+	//			}
+	//			else
+	//			{
+	//				HUD->CloseLootWidget();
+	//			}
+	//		}
+	//	}
+	//}
+}
+
 // -------- OnRep --------
 void AZDPlayerCharacterBase::OnRep_CharacterRotation()
 {
@@ -234,6 +271,10 @@ void AZDPlayerCharacterBase::OnRep_CharacterRotation()
 		FRotator Rotation = FRotator(0.0f, 0.0f, 0.0f);
 		GetSprite()->SetWorldRotation(Rotation);
 	}
+}
+
+void AZDPlayerCharacterBase::OnRep_EquippedWeapon()
+{
 }
 
 void AZDPlayerCharacterBase::UseItem(UItem* Item)
@@ -304,6 +345,181 @@ void AZDPlayerCharacterBase::ItemRemovedFromInventory(UItem* Item)
 {
 }
 
+bool AZDPlayerCharacterBase::EquipItem(UEquippableItem* Item)
+{
+	EquippedItems.Add(Item->Slot, Item);
+	OnEquippedItemsChanged.Broadcast(Item->Slot, Item);
+	return true;
+}
+
+bool AZDPlayerCharacterBase::UnEquipItem(UEquippableItem* Item)
+{
+	if (Item)
+	{
+		if (EquippedItems.Contains(Item->Slot))
+		{
+			if (Item == *EquippedItems.Find(Item->Slot))
+			{
+				EquippedItems.Remove(Item->Slot);
+				OnEquippedItemsChanged.Broadcast(Item->Slot, nullptr);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void AZDPlayerCharacterBase::EquipGear(UGearEquippableItem* Gear)
+{
+
+	if (UMaterialInstanceDynamic* DynamicMaterialInstance = GetSlotMaterialInstance(Gear->Slot))
+	{
+		DynamicMaterialInstance->SetTextureParameterValue(TEXT("TextureParameter"), Gear->Texture);
+		//DynamicMaterialInstance->SetVectorParameterValue(TEXT("EmissiveColor"), FLinearColor::Yellow);
+	}
+
+	/*if (UMaterialInstance* EquippableMaterialInstance = GetSlotMaterialInstance(Gear->Slot))
+	{
+		UMaterialInstanceDynamic* DynamicMaterialInstance = UMaterialInstanceDynamic::Create(EquippableMaterialInstance->GetMaterial(), nullptr);
+		if (DynamicMaterialInstance)
+		{
+			DynamicMaterialInstance->SetTextureParameterValue(TEXT("TextureParameter"), Gear->Texture);
+			EquippableMaterialInstance = UMaterialInstance::Create(DynamicMaterialInstance->GetMaterial(), this);
+		}
+	}
+	else
+	{
+		EquippableMaterialInstance = nullptr;
+	}*/
+}
+
+void AZDPlayerCharacterBase::UnEquipGear(const EEquippableSlot Slot)
+{
+	//if (UMaterialInstanceDynamic* EquippableMesh = GetSlotMaterialInstance(Slot))
+	//{
+	//	if (USkeletalMesh* BodyMesh = *NakedMeshes.Find(Slot))
+	//	{
+	//		EquippableMesh->SetSkeletalMesh(BodyMesh);
+
+	//		////Put the materials back on the body mesh (Since gear may have applied a different material)
+	//		//for (int32 i = 0; i < BodyMesh->Materials.Num(); ++i)
+	//		//{
+	//		//	if (BodyMesh->Materials.IsValidIndex(i))
+	//		//	{
+	//		//		EquippableMesh->SetMaterial(i, BodyMesh->Materials[i].MaterialInterface);
+	//		//	}
+	//		//}
+	//	}
+	//	else
+	//	{
+	//		//For some gear like backpacks, there is no naked mesh
+	//		EquippableMesh->SetSkeletalMesh(nullptr);
+	//	}
+	//}
+}
+
+void AZDPlayerCharacterBase::EquipWeapon(UWeaponItem* WeaponItem)
+{
+	//if (WeaponItem && WeaponItem->WeaponClass && HasAuthority())
+	//{
+	//	if (EquippedWeapon)
+	//	{
+	//		UnEquipWeapon();
+	//	}
+
+	//	//Spawn the weapon in
+	//	FActorSpawnParameters SpawnParams;
+	//	SpawnParams.bNoFail = true;
+	//	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	//	SpawnParams.Owner = SpawnParams.Instigator = this;
+
+	//	if (AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponItem->WeaponClass, SpawnParams))
+	//	{
+	//		Weapon->Item = WeaponItem;
+
+	//		EquippedWeapon = Weapon;
+	//		OnRep_EquippedWeapon();
+
+	//		Weapon->OnEquip();
+	//	}
+	//}
+}
+
+void AZDPlayerCharacterBase::UnEquipWeapon()
+{
+	/*if (HasAuthority() && EquippedWeapon)
+	{
+		EquippedWeapon->OnUnEquip();
+		EquippedWeapon->Destroy();
+		EquippedWeapon = nullptr;
+		OnRep_EquippedWeapon();
+	}*/
+}
+
+float AZDPlayerCharacterBase::ModifyHealth(const float Delta)
+{
+	const float OldHealth = Health;
+
+	Health = FMath::Clamp<float>(Health + Delta, 0.f, MaxHealth);
+
+	return Health - OldHealth;
+}
+
+void AZDPlayerCharacterBase::OnRep_Health(float OldHealth)
+{
+	OnHealthModified(Health - OldHealth);
+}
+
+void AZDPlayerCharacterBase::SetLootSource(UInventoryComponent* NewLootSource)
+{
+	/**If the thing we're looting gets destroyed, we need to tell the client to remove their Loot screen*/
+	if (NewLootSource && NewLootSource->GetOwner())
+	{
+		NewLootSource->GetOwner()->OnDestroyed.AddUniqueDynamic(this, &AZDPlayerCharacterBase::OnLootSourceOwnerDestroyed);
+	}
+
+	if (HasAuthority())
+	{
+		if (NewLootSource)
+		{
+			//Looting a player keeps their body alive for an extra 2 minutes to provide enough time to loot their items
+			if (AZDPlayerCharacterBase* Character = Cast<AZDPlayerCharacterBase>(NewLootSource->GetOwner()))
+			{
+				Character->SetLifeSpan(120.f);
+			}
+		}
+
+		LootSource = NewLootSource;
+		OnRep_LootSource();
+	}
+	else
+	{
+		ServerSetLootSource(NewLootSource);
+	}
+}
+
+bool AZDPlayerCharacterBase::IsLooting() const
+{
+	return LootSource != nullptr;
+}
+
+UMaterialInstanceDynamic* AZDPlayerCharacterBase::GetSlotMaterialInstance(const EEquippableSlot Slot)
+{
+	if (PlayerMaterials.Contains(Slot))
+	{
+		return *PlayerMaterials.Find(Slot);
+	}
+	return nullptr;
+}
+
+void AZDPlayerCharacterBase::BeginLootingPlayer(AZDPlayerCharacterBase* Character)
+{
+	if (Character)
+	{
+		Character->SetLootSource(PlayerInventory);
+	}
+}
+
 
 // -------- RPC --------
 // 
@@ -342,6 +558,16 @@ void AZDPlayerCharacterBase::Server_DropItem_Implementation(class UItem* Item, c
 }
 
 bool AZDPlayerCharacterBase::Server_DropItem_Validate(class UItem* Item, const int32 Quantity)
+{
+	return true;
+}
+
+void AZDPlayerCharacterBase::ServerSetLootSource_Implementation(class UInventoryComponent* NewLootSource)
+{
+	SetLootSource(NewLootSource);
+}
+
+bool AZDPlayerCharacterBase::ServerSetLootSource_Validate(class UInventoryComponent* NewLootSource)
 {
 	return true;
 }

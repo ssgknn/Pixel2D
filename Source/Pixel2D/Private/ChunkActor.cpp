@@ -43,7 +43,7 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 
 
 	// Initialize TileSets
-	static ConstructorHelpers::FObjectFinder<UPaperTileSet> TileSetObject(TEXT("/Game/2DAssets/Assets/TS_Placeholder0"));
+	static ConstructorHelpers::FObjectFinder<UPaperTileSet> TileSetObject(TEXT("/Game/2DAssets/PrototypeItch/Assets/TS_Placeholder0"));
 	TileSet0 = TileSetObject.Object;
 
 }

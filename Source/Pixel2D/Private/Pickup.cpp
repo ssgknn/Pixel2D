@@ -134,7 +134,6 @@ void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	{
 		if (AZDPlayerCharacterBase* PlayerCharacterActor = Cast<AZDPlayerCharacterBase>(OtherActor))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Pickup::OnSphereOverlap"));
 			OnTakePickup(PlayerCharacterActor);
 		}
 		if (APickup* OtherPickup = Cast<APickup>(OtherActor))
