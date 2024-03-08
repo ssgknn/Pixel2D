@@ -76,18 +76,6 @@ void AZDPlayerCharacterBase::BeginPlay()
 
 	Super::BeginPlay();
 
-	//get WorldHandler reference
-		/*TArray<AActor*> FoundActors;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWorldHandler::StaticClass(), FoundActors);
-
-		if (FoundActors.Num() > 0)
-		{
-			WorldHandlerReference = Cast<AWorldHandler>(FoundActors[0]);
-		}*/
-	ChestMaterial = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(5), nullptr);
-	PlayerMesh->SetMaterial(5, ChestMaterial);
-	PlayerMaterials.Add(EEquippableSlot::EIS_Chest, ChestMaterial);
-
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -106,13 +94,42 @@ void AZDPlayerCharacterBase::BeginPlay()
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		PlayerController->SetInputMode(InputMode);
 
-		// Set input mode to game only
-		/*FInputModeGameOnly InputMode;
-		PlayerController->SetInputMode(InputMode);*/
-
 	}
 	
-	//GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase"));
+	// * Initialize player materials *
+
+	MI_Body = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(0), nullptr);
+	PlayerMesh->SetMaterial(0, MI_Body);
+	PlayerDefaultMaterials.Add(EEquippableSlot::EIS_Chest, MI_Body);
+	PlayerMaterials.Add(EEquippableSlot::EIS_Chest, MI_Body);
+
+	MI_HeadGear = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(1), nullptr);
+	PlayerMesh->SetMaterial(1, MI_HeadGear);
+	PlayerDefaultMaterials.Add(EEquippableSlot::EIS_Helmet, MI_HeadGear);
+	PlayerMaterials.Add(EEquippableSlot::EIS_Helmet, MI_HeadGear);
+
+	MI_Hair = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(4), nullptr);
+	PlayerMesh->SetMaterial(4, MI_Hair);
+	PlayerMaterials.Add(EEquippableSlot::EIS_Head, MI_Hair);
+
+	MI_BodyGear = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(5), nullptr);
+	PlayerMesh->SetMaterial(5, MI_BodyGear);
+	PlayerDefaultMaterials.Add(EEquippableSlot::EIS_Vest, MI_BodyGear);
+	PlayerMaterials.Add(EEquippableSlot::EIS_Vest, MI_BodyGear);
+
+	MI_LegGear = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(6), nullptr);
+	PlayerMesh->SetMaterial(6, MI_LegGear);
+	PlayerMaterials.Add(EEquippableSlot::EIS_Legs, MI_LegGear);
+
+	MI_FootGear = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(7), nullptr);
+	PlayerMesh->SetMaterial(7, MI_FootGear);
+	PlayerMaterials.Add(EEquippableSlot::EIS_Feet, MI_FootGear);
+
+	MI_BackPack = UMaterialInstanceDynamic::Create(PlayerMesh->GetMaterial(10), nullptr);
+	PlayerMesh->SetMaterial(10, MI_BackPack);
+	PlayerMaterials.Add(EEquippableSlot::EIS_Backpack, MI_BackPack);
+
+
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
 }
 
@@ -264,12 +281,14 @@ void AZDPlayerCharacterBase::OnRep_CharacterRotation()
 		//Controller->SetControlRotation(FRotator(0.0, 0.0, 0.0));
 		FRotator Rotation = FRotator(0.0f, 180.0f, 0.0f);
 		GetSprite()->SetWorldRotation(Rotation);
+		PlayerMesh->SetRelativeScale3D(FVector(-1, -1, 1));
 	}
 	else
 	{
 		//Controller->SetControlRotation(FRotator(0.0, 180.0, 180.0));
 		FRotator Rotation = FRotator(0.0f, 0.0f, 0.0f);
 		GetSprite()->SetWorldRotation(Rotation);
+		PlayerMesh->SetRelativeScale3D(FVector(1, 1, 1));
 	}
 }
 

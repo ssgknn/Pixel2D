@@ -161,32 +161,32 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = Mesh)
 	TMap<EEquippableSlot, UMaterialInstanceDynamic*> PlayerMaterials;
 
-	/*UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstance* HelmetMesh;
+	UPROPERTY(BlueprintReadOnly, Category = Mesh)
+	TMap<EEquippableSlot, UMaterialInstance*> PlayerDefaultMaterials;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstance* ChestMesh;
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_Body;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstance* Hair;*/
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_HeadGear;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstanceDynamic* ChestMaterial;
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_Hair;
 
-	/*UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstance* LegsMesh;
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_BodyGear;
+	
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_LegGear;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstance* FeetMesh;
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_FootGear;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstance* VestMesh;
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_Emote;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstance* HandsMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Components")
-	UMaterialInstance* BackpackMesh;*/
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_BackPack;
 
 	
 protected:
