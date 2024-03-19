@@ -281,7 +281,7 @@ void AZDPlayerCharacterBase::OnRep_CharacterRotation()
 		//Controller->SetControlRotation(FRotator(0.0, 0.0, 0.0));
 		FRotator Rotation = FRotator(0.0f, 180.0f, 0.0f);
 		GetSprite()->SetWorldRotation(Rotation);
-		PlayerMesh->SetRelativeScale3D(FVector(-1, -1, 1));
+		PlayerMesh->SetRelativeScale3D(FVector(1, -1, 1));
 	}
 	else
 	{
