@@ -232,4 +232,19 @@ private:
 
 #pragma endregion Input
 
+#pragma region PlayerController
+
+public:
+
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientShowNotification(const FText& Message);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowNotification_BP(const FText& Message);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowInGameUI();
+
+#pragma endregion PlayerController
+
 };

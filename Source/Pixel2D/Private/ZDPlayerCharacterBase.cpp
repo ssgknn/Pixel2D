@@ -296,6 +296,17 @@ void AZDPlayerCharacterBase::OnRep_EquippedWeapon()
 {
 }
 
+void AZDPlayerCharacterBase::ClientShowNotification_Implementation(const FText& Message)
+{
+	ShowNotification_BP(Message);
+
+	// ** later make a widget class in c++ instead of BP **
+	/*if (ASurvivalHUD* HUD = Cast<ASurvivalHUD>(GetHUD()))
+	{
+		HUD->ShowNotification(Message);
+	}*/
+}
+
 void AZDPlayerCharacterBase::UseItem(UItem* Item)
 {
 	if (!HasAuthority() && Item)
