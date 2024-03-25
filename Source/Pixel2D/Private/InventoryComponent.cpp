@@ -20,7 +20,9 @@ UInventoryComponent::UInventoryComponent()
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	Items.SetNum(Capacity, false);
 	Items.Init(nullptr, Capacity);
+	
 }
 
 
@@ -118,6 +120,7 @@ bool UInventoryComponent::RemoveItem(class UItem* Item)
 		{
 			//Items.RemoveSingle(Item);
 			Items[Item->InventoryIndexAt] = nullptr;
+			Item->InventoryIndexAt = -1;
 			OnItemRemoved.Broadcast(Item);
 
 			OnRep_Items();
@@ -245,10 +248,14 @@ bool UInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, clas
 	{
 		for (auto& Item : Items)
 		{
-			if (Channel->KeyNeedsToReplicate(Item->GetUniqueID(), Item->RepKey))
+			if (Item != nullptr)
 			{
-				bWroteSomething |= Channel->ReplicateSubobject(Item, *Bunch, *RepFlags);
+				if (Channel->KeyNeedsToReplicate(Item->GetUniqueID(), Item->RepKey))
+				{
+					bWroteSomething |= Channel->ReplicateSubobject(Item, *Bunch, *RepFlags);
+				}
 			}
+			
 		}
 	}
 

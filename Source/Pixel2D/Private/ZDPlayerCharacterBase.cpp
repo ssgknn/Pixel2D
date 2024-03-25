@@ -377,7 +377,13 @@ void AZDPlayerCharacterBase::ItemRemovedFromInventory(UItem* Item)
 
 bool AZDPlayerCharacterBase::EquipItem(UEquippableItem* Item)
 {
+	
+	if (EquippedItems.Find(Item->Slot))
+	{
+		UnEquipItem(*EquippedItems.Find(Item->Slot));
+	}
 	EquippedItems.Add(Item->Slot, Item);
+	Item->OwningInventory->RemoveItem(Item);
 	OnEquippedItemsChanged.Broadcast(Item->Slot, Item);
 	return true;
 }
@@ -390,9 +396,12 @@ bool AZDPlayerCharacterBase::UnEquipItem(UEquippableItem* Item)
 		{
 			if (Item == *EquippedItems.Find(Item->Slot))
 			{
-				EquippedItems.Remove(Item->Slot);
-				OnEquippedItemsChanged.Broadcast(Item->Slot, nullptr);
-				return true;
+				if (PlayerInventory->TryAddItem(Item).Result == EItemAddResult::IAR_AllItemsAdded)
+				{
+					EquippedItems.Remove(Item->Slot);
+					OnEquippedItemsChanged.Broadcast(Item->Slot, nullptr);
+					return true;
+				}
 			}
 		}
 	}

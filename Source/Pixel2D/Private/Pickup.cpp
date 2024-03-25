@@ -55,7 +55,6 @@ void APickup::InitializePickup(const TSubclassOf<class UItem> ItemClass, const i
 
 		Item->MarkDirtyForReplication();
 	}
-
 }
 
 // Called when the game starts or when spawned
