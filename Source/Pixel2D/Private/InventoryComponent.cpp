@@ -17,6 +17,13 @@ UInventoryComponent::UInventoryComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UInventoryComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	//Items.Init(nullptr, Capacity);
+
+}
+
 
 FItemAddResult UInventoryComponent::TryAddItem(class UItem* Item)
 {
@@ -28,6 +35,15 @@ FItemAddResult UInventoryComponent::TryAddItemFromClass(TSubclassOf<class UItem>
 	UItem* Item = NewObject<UItem>(GetOwner(), ItemClass);
 	Item->SetQuantity(Quantity);
 	return TryAddItem_Internal(Item);
+}
+
+void UInventoryComponent::ReorderItems(int idxAt, int newIdx)
+{
+	if (Items[idxAt] && Items[newIdx] == nullptr)
+	{
+		Items[newIdx] = Items[idxAt];
+		Items[idxAt] = nullptr;
+	}
 }
 
 int32 UInventoryComponent::ConsumeItem(class UItem* Item)

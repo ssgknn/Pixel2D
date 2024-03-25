@@ -111,6 +111,9 @@ public:
 	FORCEINLINE float GetStackWeight() const { return Quantity * Weight; };
 
 	UFUNCTION(BlueprintCallable, Category = "Item")
+	FORCEINLINE UInventoryComponent* GetOwningInventory() const { return OwningInventory; };
+
+	UFUNCTION(BlueprintCallable, Category = "Item")
 	FORCEINLINE bool IsStackFull() const { return Quantity >= MaxStackSize; }
 
 	UFUNCTION(BlueprintPure, Category = "Item")

@@ -95,6 +95,12 @@ public:
 	// Sets default values for this component's properties
 	UInventoryComponent();
 
+
+protected:
+	virtual void BeginPlay();
+
+public:
+
 	/**Add an item to the inventory.
 	@param ErrorText the text to display if the item couldnt be added to the inventory.
 	@return the amount of the item that was added to the inventory */
@@ -106,6 +112,9 @@ public:
 	@return the amount of the item that was added to the inventory */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	FItemAddResult TryAddItemFromClass(TSubclassOf<class UItem> ItemClass, const int32 Quantity = 1);
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void ReorderItems(int idxAt, int newIdx);
 
 	/** Take some quantity away from the item, and remove it from the inventory when quantity reaches zero.
 	Useful for things like eating food, using ammo, etc.*/
