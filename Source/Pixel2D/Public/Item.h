@@ -91,6 +91,9 @@ public:
 	UPROPERTY()
 	class UInventoryComponent* OwningInventory;
 
+	UPROPERTY()
+	int32 InventoryIndexAt;
+
 	/**Used to efficiently replicate inventory items*/
 	UPROPERTY()
 	int32 RepKey;
@@ -106,6 +109,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Item")
 	FORCEINLINE int32 GetQuantity() const { return Quantity; }
+	
+	UFUNCTION(BlueprintPure, Category = "Item")
+	FORCEINLINE int32 GetInventoryIndexAt() const { return InventoryIndexAt; }
 
 	UFUNCTION(BlueprintCallable, Category = "Item")
 	FORCEINLINE float GetStackWeight() const { return Quantity * Weight; };

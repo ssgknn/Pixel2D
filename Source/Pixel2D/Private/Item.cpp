@@ -57,6 +57,8 @@ UItem::UItem()
 	Quantity = 1;
 	MaxStackSize = 2;
 	RepKey = 0;
+
+	InventoryIndexAt = -1;
 }
 
 void UItem::OnRep_Quantity()

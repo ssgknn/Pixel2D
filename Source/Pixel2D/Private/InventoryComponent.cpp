@@ -20,8 +20,7 @@ UInventoryComponent::UInventoryComponent()
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	//Items.Init(nullptr, Capacity);
-
+	Items.Init(nullptr, Capacity);
 }
 
 
@@ -41,9 +40,12 @@ void UInventoryComponent::ReorderItems(int idxAt, int newIdx)
 {
 	if (Items[idxAt] && Items[newIdx] == nullptr)
 	{
+		
+		Items[idxAt]->InventoryIndexAt = newIdx;
 		Items[newIdx] = Items[idxAt];
 		Items[idxAt] = nullptr;
 	}
+	ClientRefreshInventory();
 }
 
 int32 UInventoryComponent::ConsumeItem(class UItem* Item)
@@ -88,7 +90,8 @@ bool UInventoryComponent::RemoveItem(class UItem* Item)
 	{
 		if (Item)
 		{
-			Items.RemoveSingle(Item);
+			//Items.RemoveSingle(Item);
+			Items[Item->InventoryIndexAt] = nullptr;
 			OnItemRemoved.Broadcast(Item);
 
 			OnRep_Items();
@@ -226,7 +229,7 @@ bool UInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, clas
 	return bWroteSomething;
 }
 
-UItem* UInventoryComponent::AddItem(class UItem* Item, const int32 Quantity)
+UItem* UInventoryComponent::AddNewItem(class UItem* Item, const int32 Quantity)
 {
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
@@ -235,7 +238,14 @@ UItem* UInventoryComponent::AddItem(class UItem* Item, const int32 Quantity)
 		NewItem->SetQuantity(Quantity);
 		NewItem->OwningInventory = this;
 		NewItem->AddedToInventory(this);
-		Items.Add(NewItem);
+		int32 idx = FindFirstEmptyIdx();
+
+		if (idx >= 0)
+		{
+			NewItem->InventoryIndexAt = idx;
+			Items[idx] = NewItem;
+		}
+		
 		NewItem->MarkDirtyForReplication();
 		OnItemAdded.Broadcast(NewItem);
 		OnRep_Items();
@@ -253,7 +263,7 @@ void UInventoryComponent::OnRep_Items()
 	for (auto& Item : Items)
 	{
 		//On the client the world won't be set initially, so it set if not
-		if (!Item->World)
+		if (Item && !Item->World)
 		{
 			OnItemAdded.Broadcast(Item);
 			Item->World = GetWorld();
@@ -291,7 +301,7 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 			}
 			else //we want to add a stackable item that doesn't exist in the inventory
 			{
-				if (Items.Num() + 1 > GetCapacity())
+				if (CountValidElements(Items) + 1 > GetCapacity())
 				{
 					return FItemAddResult::AddedNone(Item->GetQuantity(), FText::Format(LOCTEXT("InventoryCapacityFullText", "Couldn't add {ItemName} to Inventory. Inventory is full."), Item->DisplayName));
 				}
@@ -300,13 +310,13 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 				const int32 QuantityMaxAddAmount = FMath::Min(Item->MaxStackSize, Item->GetQuantity());
 				const int32 AddAmount = FMath::Min(WeightMaxAddAmount, QuantityMaxAddAmount);
 
-				AddItem(Item, AddAmount);
+				AddNewItem(Item, AddAmount);
 				return AddAmount >= Item->GetQuantity() ? FItemAddResult::AddedAll(Item->GetQuantity()) : FItemAddResult::AddedSome(Item->GetQuantity(), AddAmount, LOCTEXT("StackAddedSomeFullText", "Couldn't add all of stack to inventory."));
 			}
 		}
 		else //item isnt stackable
 		{
-			if (Items.Num() + 1 > GetCapacity())
+			if (CountValidElements(Items) + 1 > GetCapacity())
 			{
 				return FItemAddResult::AddedNone(Item->GetQuantity(), FText::Format(LOCTEXT("InventoryCapacityFullText", "Couldn't add {ItemName} to Inventory. Inventory is full."), Item->DisplayName));
 			}
@@ -323,7 +333,7 @@ FItemAddResult UInventoryComponent::TryAddItem_Internal(class UItem* Item)
 			//Non-stackables should always have a quantity of 1
 			ensure(Item->GetQuantity() == 1);
 
-			AddItem(Item, 1);
+			AddNewItem(Item, 1);
 
 			return FItemAddResult::AddedAll(Item->GetQuantity());
 		}
@@ -343,6 +353,31 @@ void UInventoryComponent::ItemRemoved(class UItem* Item)
 {
 	FString RoleString = GetOwner()->HasAuthority() ? "server" : "client";
 	UE_LOG(LogTemp, Warning, TEXT("Item Removed: %s on %s"), *GetNameSafe(Item), *RoleString);
+}
+
+int32 UInventoryComponent::CountValidElements(const TArray<class UItem*>& InArray)
+{
+	int32 ValidCount = 0;
+	for (int32 i = 0; i < InArray.Num(); ++i)
+	{
+		if (InArray[i] != nullptr)
+		{
+			++ValidCount;
+		}
+	}
+	return ValidCount;
+}
+
+int32 UInventoryComponent::FindFirstEmptyIdx()
+{
+	for (int32 i = 0; i < Items.Num(); ++i)
+	{
+		if (Items[i] == nullptr)
+		{
+			return i;
+		}
+	}
+	return -1;
 }
 
 #undef LOCTEXT_NAMESPACE

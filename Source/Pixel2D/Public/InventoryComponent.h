@@ -200,7 +200,7 @@ protected:
 private:
 
 	/**Don't call Items.Add() directly, use this function instead, as it handles replication and ownership*/
-	UItem* AddItem(class UItem* Item, const int32 Quantity);
+	UItem* AddNewItem(class UItem* Item, const int32 Quantity);
 
 	UFUNCTION()
 	void OnRep_Items();
@@ -217,4 +217,11 @@ private:
 	UFUNCTION()
 	void ItemRemoved(class UItem* Item);
 		
+
+	// ** --- helper functions
+
+	// Function to count valid elements
+	int32 CountValidElements(const TArray<class UItem*>& InArray);
+
+	int32 FindFirstEmptyIdx();
 };
