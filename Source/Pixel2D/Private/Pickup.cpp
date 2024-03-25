@@ -138,12 +138,16 @@ void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 		}
 		if (APickup* OtherPickup = Cast<APickup>(OtherActor))
 		{
-			int32 totalQuantity = Item->GetQuantity() + OtherPickup->Item->GetQuantity();
-			if (totalQuantity <= Item->MaxStackSize)
+			if (OtherPickup->Item->bStackable)
 			{
-				Item->SetQuantity(totalQuantity);
-				OtherPickup->Destroy();
+				int32 totalQuantity = Item->GetQuantity() + OtherPickup->Item->GetQuantity();
+				if (totalQuantity <= Item->MaxStackSize)
+				{
+					Item->SetQuantity(totalQuantity);
+					OtherPickup->Destroy();
+				}
 			}
+			
 		}
 	}
 }

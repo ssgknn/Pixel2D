@@ -45,6 +45,32 @@ void UInventoryComponent::ReorderItems(int idxAt, int newIdx)
 		Items[newIdx] = Items[idxAt];
 		Items[idxAt] = nullptr;
 	}
+	else if (Items[idxAt]->GetClass() == Items[newIdx]->GetClass())
+	{
+		if ((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) <= Items[newIdx]->MaxStackSize)
+		{
+			Items[newIdx]->SetQuantity(Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity());
+			Items[idxAt] = nullptr;
+		}
+		else
+		{
+			Items[idxAt]->SetQuantity((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) - Items[idxAt]->MaxStackSize);
+			Items[newIdx]->SetQuantity(Items[newIdx]->MaxStackSize);
+		}
+		
+	}
+	else if (Items[idxAt] && Items[newIdx])
+	{
+		Items[idxAt]->InventoryIndexAt = newIdx;
+		Items[newIdx]->InventoryIndexAt = idxAt;
+
+		UItem* tempItem = Items[newIdx];
+
+		Items[newIdx] = Items[idxAt];
+		Items[idxAt] = tempItem;
+	}
+
+
 	ClientRefreshInventory();
 }
 
