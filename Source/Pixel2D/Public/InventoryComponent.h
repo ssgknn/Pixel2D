@@ -113,7 +113,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	FItemAddResult TryAddItemFromClass(TSubclassOf<class UItem> ItemClass, const int32 Quantity = 1);
 
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION()
 	void ReorderItems(int idxAt, int newIdx);
 
 	/** Take some quantity away from the item, and remove it from the inventory when quantity reaches zero.

@@ -59,6 +59,12 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_DropItem(class UItem* Item, const int32 Quantity);
 
+	UFUNCTION(BlueprintCallable, Category = "Items")
+	void ReorderPlayerItems(int idxAt, int newIdx);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ReorderPlayerItems(int idxAt, int newIdx);
+
 	UFUNCTION()
 	void ItemAddedToInventory(class UItem* Item);
 

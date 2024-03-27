@@ -42,37 +42,37 @@ void UInventoryComponent::ReorderItems(int idxAt, int newIdx)
 {
 	if (Items[idxAt] && Items[newIdx] == nullptr)
 	{
-		
 		Items[idxAt]->InventoryIndexAt = newIdx;
 		Items[newIdx] = Items[idxAt];
 		Items[idxAt] = nullptr;
 	}
-	else if (Items[idxAt]->GetClass() == Items[newIdx]->GetClass())
+	else if (Items[idxAt] && Items[newIdx])
 	{
-		if ((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) <= Items[newIdx]->MaxStackSize)
+		if (Items[idxAt]->GetClass() == Items[newIdx]->GetClass())
 		{
-			Items[newIdx]->SetQuantity(Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity());
-			Items[idxAt] = nullptr;
+			if ((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) <= Items[newIdx]->MaxStackSize)
+			{
+				Items[newIdx]->SetQuantity(Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity());
+				Items[idxAt] = nullptr;
+			}
+			else
+			{
+				Items[idxAt]->SetQuantity((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) - Items[idxAt]->MaxStackSize);
+				Items[newIdx]->SetQuantity(Items[newIdx]->MaxStackSize);
+			}
 		}
 		else
 		{
-			Items[idxAt]->SetQuantity((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) - Items[idxAt]->MaxStackSize);
-			Items[newIdx]->SetQuantity(Items[newIdx]->MaxStackSize);
+			Items[idxAt]->InventoryIndexAt = newIdx;
+			Items[newIdx]->InventoryIndexAt = idxAt;
+
+			UItem* tempItem = Items[newIdx];
+
+			Items[newIdx] = Items[idxAt];
+			Items[idxAt] = tempItem;
 		}
-		
 	}
-	else if (Items[idxAt] && Items[newIdx])
-	{
-		Items[idxAt]->InventoryIndexAt = newIdx;
-		Items[newIdx]->InventoryIndexAt = idxAt;
-
-		UItem* tempItem = Items[newIdx];
-
-		Items[newIdx] = Items[idxAt];
-		Items[idxAt] = tempItem;
-	}
-
-
+	
 	ClientRefreshInventory();
 }
 
@@ -279,7 +279,7 @@ UItem* UInventoryComponent::AddNewItem(class UItem* Item, const int32 Quantity)
 			Items[idx] = NewItem;
 		}
 		
-		NewItem->MarkDirtyForReplication();
+		Items[idx]->MarkDirtyForReplication();
 		OnItemAdded.Broadcast(NewItem);
 		OnRep_Items();
 

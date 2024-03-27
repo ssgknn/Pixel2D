@@ -93,7 +93,6 @@ void AZDPlayerCharacterBase::BeginPlay()
 		FInputModeGameAndUI InputMode;
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		PlayerController->SetInputMode(InputMode);
-
 	}
 	
 	// * Initialize player materials *
@@ -357,14 +356,39 @@ void AZDPlayerCharacterBase::DropItem(UItem* Item, const int32 Quantity)
 			//FTransform SpawnTransform(GetActorRotation(), SpawnLocation);
 			FTransform SpawnTransform(FRotator(0.0f, 0.0f, 0.0f), SpawnLocation);
 
-			//ensure(PickupClass);
+			/*Item->OwningInventory = nullptr;
+			Item->InventoryIndexAt = -1;*/
 
+			//ensure(PickupClass);
 			if (APickup* Pickup = GetWorld()->SpawnActor<APickup>(PickupClass, SpawnTransform, SpawnParams))
 			{
 				Pickup->InitializePickup(Item->GetClass(), DroppedQuantity);
 			}
 		}
 	}
+}
+
+void AZDPlayerCharacterBase::ReorderPlayerItems(int idxAt, int newIdx)
+{
+	if (HasAuthority())
+	{
+		PlayerInventory->ReorderItems(idxAt, newIdx);
+	}
+	else
+	{
+		Server_ReorderPlayerItems(idxAt, newIdx);
+	}
+
+}
+
+void AZDPlayerCharacterBase::Server_ReorderPlayerItems_Implementation(int idxAt, int newIdx)
+{
+	ReorderPlayerItems(idxAt, newIdx);
+}
+
+bool AZDPlayerCharacterBase::Server_ReorderPlayerItems_Validate(int idxAt, int newIdx)
+{
+	return true;
 }
 
 void AZDPlayerCharacterBase::ItemAddedToInventory(UItem* Item)
@@ -377,7 +401,6 @@ void AZDPlayerCharacterBase::ItemRemovedFromInventory(UItem* Item)
 
 bool AZDPlayerCharacterBase::EquipItem(UEquippableItem* Item)
 {
-	
 	if (EquippedItems.Find(Item->Slot))
 	{
 		UnEquipItem(*EquippedItems.Find(Item->Slot));
