@@ -14,6 +14,8 @@ void UItem::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifet
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UItem, Quantity);
+	DOREPLIFETIME(UItem, InventoryIndexAt);
+	DOREPLIFETIME(UItem, OwningInventory);
 }
 
 bool UItem::IsSupportedForNetworking() const
@@ -61,7 +63,7 @@ UItem::UItem()
 	InventoryIndexAt = -1;
 }
 
-void UItem::OnRep_Quantity()
+void UItem::OnRep_Modified()
 {
 	OnItemModified.Broadcast();
 }
@@ -71,6 +73,24 @@ void UItem::SetQuantity(const int32 NewQuantity)
 	if (NewQuantity != Quantity)
 	{
 		Quantity = FMath::Clamp(NewQuantity, 0, bStackable ? MaxStackSize : 1);
+		MarkDirtyForReplication();
+	}
+}
+
+void UItem::SetInventoryIndexAt(const int32 NewIndex)
+{
+	if (NewIndex != InventoryIndexAt)
+	{
+		InventoryIndexAt = NewIndex;
+		MarkDirtyForReplication();
+	}
+}
+
+void UItem::SetOwningInventory(UInventoryComponent* NewInvenotry)
+{
+	if (NewInvenotry != OwningInventory)
+	{
+		OwningInventory = NewInvenotry;
 		MarkDirtyForReplication();
 	}
 }

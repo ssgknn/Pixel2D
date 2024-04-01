@@ -406,7 +406,7 @@ bool AZDPlayerCharacterBase::EquipItem(UEquippableItem* Item)
 		UnEquipItem(*EquippedItems.Find(Item->Slot));
 	}
 	EquippedItems.Add(Item->Slot, Item);
-	Item->OwningInventory->RemoveItem(Item);
+	Item->GetOwningInventory()->RemoveItem(Item);
 	OnEquippedItemsChanged.Broadcast(Item->Slot, Item);
 	return true;
 }
@@ -558,6 +558,44 @@ void AZDPlayerCharacterBase::SetLootSource(UInventoryComponent* NewLootSource)
 	{
 		ServerSetLootSource(NewLootSource);
 	}
+}
+
+void AZDPlayerCharacterBase::LootItem(UItem* ItemToGive)
+{
+	if (HasAuthority())
+	{
+		if (PlayerInventory &&  ItemToGive /*&& LootSource && LootSource->HasItem(ItemToGive->GetClass(), ItemToGive->GetQuantity())*/)
+		{
+			const FItemAddResult AddResult = PlayerInventory->TryAddItem(ItemToGive);
+
+			if (AddResult.AmountGiven > 0)
+			{
+				//LootSource->ConsumeItem(ItemToGive, AddResult.AmountGiven);
+			}
+			else
+			{
+				////Tell player why they couldn't loot the item
+				//if (ASurvivalPlayerController* PC = Cast<ASurvivalPlayerController>(GetController()))
+				//{
+				//	PC->ClientShowNotification(AddResult.ErrorText);
+				//}
+			}
+		}
+	}
+	else
+	{
+		Server_LootItem(ItemToGive);
+	}
+}
+
+void AZDPlayerCharacterBase::Server_LootItem_Implementation(UItem* ItemToLoot)
+{
+	LootItem(ItemToLoot);
+}
+
+bool AZDPlayerCharacterBase::Server_LootItem_Validate(UItem* ItemToLoot)
+{
+	return true;
 }
 
 bool AZDPlayerCharacterBase::IsLooting() const

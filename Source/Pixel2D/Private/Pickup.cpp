@@ -177,6 +177,29 @@ void APickup::OnTakePickup(class AZDPlayerCharacterBase* Taker)
 		UE_LOG(LogTemp, Warning, TEXT("Pickup was taken but player was not valid. "));
 		return;
 	}
+	/*FItemAddResult AddResult = Taker->LootItem(Item);
+
+	if (AddResult.Result == EItemAddResult::IAR_AllItemsAdded)
+	{
+		Item->SetQuantity(0);
+		Destroy();
+		return;
+	}
+	else if (AddResult.Result == EItemAddResult::IAR_SomeItemsAdded)
+	{
+		while (AddResult.Result == EItemAddResult::IAR_SomeItemsAdded)
+		{
+			Item->SetQuantity(Item->GetQuantity() - AddResult.AmountGiven);
+			AddResult = Taker->LootItem(Item);
+		}
+
+		if (AddResult.Result == EItemAddResult::IAR_AllItemsAdded)
+		{
+			Item->SetQuantity(0);
+			Destroy();
+			return;
+		}
+	}*/
 
 	//Not 100% sure Pending kill check is needed but should prevent player from taking a pickup another player has already tried taking
 	if (HasAuthority() && !IsPendingKillPending() && Item)

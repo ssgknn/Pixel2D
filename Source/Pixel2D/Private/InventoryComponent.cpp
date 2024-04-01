@@ -25,7 +25,6 @@ void UInventoryComponent::BeginPlay()
 	
 }
 
-
 FItemAddResult UInventoryComponent::TryAddItem(class UItem* Item)
 {
 	return TryAddItem_Internal(Item);
@@ -40,40 +39,44 @@ FItemAddResult UInventoryComponent::TryAddItemFromClass(TSubclassOf<class UItem>
 
 void UInventoryComponent::ReorderItems(int idxAt, int newIdx)
 {
-	if (Items[idxAt] && Items[newIdx] == nullptr)
+	if (GetOwner() && GetOwner()->HasAuthority())
 	{
-		Items[idxAt]->InventoryIndexAt = newIdx;
-		Items[newIdx] = Items[idxAt];
-		Items[idxAt] = nullptr;
-	}
-	else if (Items[idxAt] && Items[newIdx])
-	{
-		if (Items[idxAt]->GetClass() == Items[newIdx]->GetClass())
+		if (Items[idxAt] && Items[newIdx] == nullptr)
 		{
-			if ((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) <= Items[newIdx]->MaxStackSize)
+			Items[idxAt]->SetInventoryIndexAt(newIdx);
+			Items[newIdx] = Items[idxAt];
+			Items[idxAt] = nullptr;
+		}
+		else if (Items[idxAt] && Items[newIdx])
+		{
+			if (Items[idxAt]->GetClass() == Items[newIdx]->GetClass())
 			{
-				Items[newIdx]->SetQuantity(Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity());
-				Items[idxAt] = nullptr;
+				if ((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) <= Items[newIdx]->MaxStackSize)
+				{
+					Items[newIdx]->SetQuantity(Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity());
+					Items[idxAt] = nullptr;
+				}
+				else
+				{
+					Items[idxAt]->SetQuantity((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) - Items[idxAt]->MaxStackSize);
+					Items[newIdx]->SetQuantity(Items[newIdx]->MaxStackSize);
+				}
 			}
 			else
 			{
-				Items[idxAt]->SetQuantity((Items[idxAt]->GetQuantity() + Items[newIdx]->GetQuantity()) - Items[idxAt]->MaxStackSize);
-				Items[newIdx]->SetQuantity(Items[newIdx]->MaxStackSize);
+				Items[idxAt]->SetInventoryIndexAt(newIdx);
+				Items[newIdx]->SetInventoryIndexAt(idxAt);
+
+				UItem* tempItem = Items[newIdx];
+
+				Items[newIdx] = Items[idxAt];
+				Items[idxAt] = tempItem;
 			}
 		}
-		else
-		{
-			Items[idxAt]->InventoryIndexAt = newIdx;
-			Items[newIdx]->InventoryIndexAt = idxAt;
-
-			UItem* tempItem = Items[newIdx];
-
-			Items[newIdx] = Items[idxAt];
-			Items[idxAt] = tempItem;
-		}
+		OnRep_Items();
+		ReplicatedItemsKey++;
+		OnInventoryUpdated.Broadcast();
 	}
-	
-	ClientRefreshInventory();
 }
 
 int32 UInventoryComponent::ConsumeItem(class UItem* Item)
@@ -119,8 +122,8 @@ bool UInventoryComponent::RemoveItem(class UItem* Item)
 		if (Item)
 		{
 			//Items.RemoveSingle(Item);
-			Items[Item->InventoryIndexAt] = nullptr;
-			Item->InventoryIndexAt = -1;
+			Items[Item->GetInventoryIndexAt()] = nullptr;
+			Item->SetInventoryIndexAt(-1);
 			OnItemRemoved.Broadcast(Item);
 
 			OnRep_Items();
@@ -269,20 +272,19 @@ UItem* UInventoryComponent::AddNewItem(class UItem* Item, const int32 Quantity)
 		UItem* NewItem = NewObject<UItem>(GetOwner(), Item->GetClass());
 		NewItem->World = GetWorld();
 		NewItem->SetQuantity(Quantity);
-		NewItem->OwningInventory = this;
+		NewItem->SetOwningInventory(this);
 		NewItem->AddedToInventory(this);
 		int32 idx = FindFirstEmptyIdx();
 
 		if (idx >= 0)
 		{
-			NewItem->InventoryIndexAt = idx;
+			NewItem->SetInventoryIndexAt(idx);
 			Items[idx] = NewItem;
 		}
 		
 		Items[idx]->MarkDirtyForReplication();
 		OnItemAdded.Broadcast(NewItem);
 		OnRep_Items();
-
 		return NewItem;
 	}
 

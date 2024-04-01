@@ -93,6 +93,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetLootSource(class UInventoryComponent* NewLootSource);
 
+	UFUNCTION(BlueprintCallable, Category = "Looting")
+	void LootItem(class UItem* ItemToGive);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_LootItem(class UItem* ItemToLoot);
+
 	UFUNCTION(BlueprintPure, Category = "Looting")
 	bool IsLooting() const;
 

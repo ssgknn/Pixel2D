@@ -87,13 +87,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
 	TSubclassOf<class UItemTooltip> ItemTooltip;
 
-	/**The inventory that owns this item*/
-	UPROPERTY()
-	class UInventoryComponent* OwningInventory;
-
-	UPROPERTY()
-	int32 InventoryIndexAt;
-
 	/**Used to efficiently replicate inventory items*/
 	UPROPERTY()
 	int32 RepKey;
@@ -101,16 +94,19 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnItemModified OnItemModified;
 
-	UFUNCTION()
-	void OnRep_Quantity();
-
 	UFUNCTION(BlueprintCallable, Category = "Item")
 	void SetQuantity(const int32 NewQuantity);
+
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	void SetInventoryIndexAt(const int32 NewIndex);
+	
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	void SetOwningInventory(class UInventoryComponent* NewInvenotry);
 
 	UFUNCTION(BlueprintPure, Category = "Item")
 	FORCEINLINE int32 GetQuantity() const { return Quantity; }
 	
-	UFUNCTION(BlueprintPure, Category = "Item")
+	UFUNCTION(BlueprintCallable, Category = "Item")
 	FORCEINLINE int32 GetInventoryIndexAt() const { return InventoryIndexAt; }
 
 	UFUNCTION(BlueprintCallable, Category = "Item")
@@ -131,13 +127,23 @@ public:
 	virtual void Use(class AZDPlayerCharacterBase* Character);
 	virtual void AddedToInventory(class UInventoryComponent* Inventory);
 
+	UFUNCTION()
+	void OnRep_Modified();
+
 	/**Mark the object as needing replication. We must call this internally after modifying any replicated properties*/
 	void MarkDirtyForReplication();
 
 protected:
 
 	/**The amount of the item*/
-	UPROPERTY(ReplicatedUsing = OnRep_Quantity, EditAnywhere, Category = "Item", meta = (UIMin = 1, EditCondition = bStackable))
+	UPROPERTY(ReplicatedUsing = OnRep_Modified, EditAnywhere, Category = "Item", meta = (UIMin = 1, EditCondition = bStackable))
 	int32 Quantity;
+
+	/**The inventory that owns this item*/
+	UPROPERTY(ReplicatedUsing = OnRep_Modified)
+	class UInventoryComponent* OwningInventory;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Modified)
+	int32 InventoryIndexAt;
 
 };
