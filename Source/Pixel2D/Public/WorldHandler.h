@@ -19,7 +19,7 @@ public:
 #pragma region DataVariables
 
 	// ChunkDATA
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(ReplicatedUsing = OnRep_WorldDataChanged)
 	TArray<FChunkData> WorldDATA;
 
 	// Chunk
@@ -94,12 +94,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	UFUNCTION()
 	void AddChunks();
 
 	UFUNCTION()
 	uint8 IsChunkExists(const int32 X, const int32 Y);
-
 
 	UFUNCTION(BlueprintCallable, Category = "Items")
 	void SpawnPickup(FPickupData PickupData);
@@ -108,7 +109,21 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SpawnPickup(FPickupData PickupData);
 
+	UFUNCTION()
+	void UpdateWorldData(TArray<FChunkChangeData> chunksToUpdate);
+
+	UFUNCTION(Server, Reliable)
+	void Server_UpdateWorldData(const TArray<FChunkChangeData>& chunksToUpdate);
+
+	//UFUNCTION(Client, Reliable)
+	//void Client_UpdateWorldData(TArray<FChunkData> chunksToUpdate);
+
+	void GetFChunkDataByChunkCoordinate(FChunkData& desiredChunkData, const FIntPoint& TargetChunkCoordinate);
+
 private:
+	int32 FindChunkIndexByCoordinate(const FIntPoint& TargetCoordinate);
+	int32 FindActiveChunkIndexByCoordinate(const FIntPoint& TargetCoordinate);
+
 	void InitializeData();
 
 	void UpdatePlayerPosition();
@@ -119,6 +134,6 @@ private:
 
 	FIntPoint GetChunkCoordPlayerAt();
 
-	FChunkData GetFChunkDataByChunkCoordinate(const FIntPoint& TargetChunkCoordinate);
-
+	UFUNCTION()
+	void OnRep_WorldDataChanged();
 };

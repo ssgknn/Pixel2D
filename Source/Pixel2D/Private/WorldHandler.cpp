@@ -9,6 +9,7 @@
 #include "FileHandler.h"
 #include "Item.h"
 
+#include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/TextRenderComponent.h"
 #include "PaperTileMapComponent.h"
@@ -20,6 +21,7 @@ AWorldHandler::AWorldHandler()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -32,16 +34,23 @@ void AWorldHandler::BeginPlay()
 
 	WorldGen->GenerateWorld(ChunkElementCount);
 	WorldDATA = WorldGen->WorldData;
+
+	PlayerActorRef->WorldHandlerRef = this;
 }
 
 //Called every frame
 void AWorldHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	
 	UpdatePlayerPosition();
 	RefreshChunks();
+}
+
+void AWorldHandler::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWorldHandler, WorldDATA);
 }
 
 void AWorldHandler::InitializeData()
@@ -203,6 +212,79 @@ void AWorldHandler::RefreshChunks()
 	}
 }
 
+void AWorldHandler::UpdateWorldData(TArray<FChunkChangeData> chunksToUpdate)
+{
+	if (HasAuthority())
+	{
+		if (chunksToUpdate.Num() > 0)
+		{
+			for (int32 idx = 0; idx < chunksToUpdate.Num(); idx++)
+			{
+				FChunkData& ChunkToUpdate = WorldDATA[FindChunkIndexByCoordinate(chunksToUpdate[idx].ChunkCoordinate)];
+
+				for (int32 blockID = 0; blockID < chunksToUpdate[idx].BlockIdx.Num(); blockID++)
+				{
+					ChunkToUpdate.BlockTextureID[chunksToUpdate[idx].BlockIdx[blockID]] = chunksToUpdate[idx].BlockTextureID[blockID];
+					ChunkToUpdate.BlockTextureID[chunksToUpdate[idx].bHasCollision[blockID]] = chunksToUpdate[idx].bHasCollision[blockID];
+				}
+
+				if (IsChunkExists(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y))
+				{
+					FIntPoint coords = FIntPoint(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y);
+					ChunksArray[FindActiveChunkIndexByCoordinate(coords)]->SetFChunkData(ChunkToUpdate);
+				}
+			}
+			//Client_UpdateWorldData(chunksToUpdate);
+		}
+	}
+	else
+	{
+		Server_UpdateWorldData(chunksToUpdate);
+	}
+}
+
+void AWorldHandler::Server_UpdateWorldData_Implementation(const TArray<FChunkChangeData>& chunksToUpdate)
+{
+	UpdateWorldData(chunksToUpdate);
+}
+
+//void AWorldHandler::Client_UpdateWorldData_Implementation(TArray<FChunkData> chunksToUpdate)
+//{
+//	for (int32 idx = 0; idx < chunksToUpdate.Num(); idx++)
+//	{
+//		WorldDATA[FindChunkIndexByCoordinate(chunksToUpdate[idx].ChunkCoordinate)] = chunksToUpdate[idx];
+//		if (IsChunkExists(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y))
+//		{
+//			FIntPoint coords = FIntPoint(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y);
+//			ChunksArray[FindActiveChunkIndexByCoordinate(coords)]->SetFChunkData(chunksToUpdate[idx]);
+//		}
+//	}
+//}
+
+int32 AWorldHandler::FindChunkIndexByCoordinate(const FIntPoint& TargetCoordinate)
+{
+	for (int32 Index = 0; Index < WorldDATA.Num(); ++Index)
+	{
+		if (WorldDATA[Index].ChunkCoordinate == TargetCoordinate)
+		{
+			return Index;
+		}
+	}
+	return INDEX_NONE; // Return an invalid index if not found
+}
+
+int32 AWorldHandler::FindActiveChunkIndexByCoordinate(const FIntPoint& TargetCoordinate)
+{
+	for (int32 Index = 0; Index < WorldDATA.Num(); ++Index)
+	{
+		if (ChunksArray[Index]->ChunkData.ChunkCoordinate == TargetCoordinate)
+		{
+			return Index;
+		}
+	}
+	return INDEX_NONE; // Return an invalid index if not found
+}
+
 FIntPoint AWorldHandler::GetChunkCoordPlayerAt()
 {
 	if ( PlayerActorRef && ChunkSize > 0 )
@@ -213,7 +295,7 @@ FIntPoint AWorldHandler::GetChunkCoordPlayerAt()
 	return FIntPoint(0, 0);
 }
 
-FChunkData AWorldHandler::GetFChunkDataByChunkCoordinate(const FIntPoint& TargetChunkCoordinate)
+void AWorldHandler::GetFChunkDataByChunkCoordinate(FChunkData& desiredChunkData, const FIntPoint& TargetChunkCoordinate)
 {
 	const FChunkData* FoundChunkData = WorldDATA.FindByPredicate([&](const FChunkData& ChunkData) {
 		return ChunkData.ChunkCoordinate == TargetChunkCoordinate;
@@ -222,13 +304,20 @@ FChunkData AWorldHandler::GetFChunkDataByChunkCoordinate(const FIntPoint& Target
 	if ( FoundChunkData )
 	{
 		// Found the matching ChunkCoordinate, return the BlockTextureID
-		return *FoundChunkData;
+		//return *FoundChunkData;
+		desiredChunkData = *FoundChunkData;
 	}
 
 	// If the function reaches here, the ChunkCoordinate was not found
 	// You may want to handle this case accordingly (e.g., return an empty array)
-	FChunkData empty;
-	return empty;
+	/*FChunkData empty;
+	return empty;*/
+}
+
+
+void AWorldHandler::OnRep_WorldDataChanged()
+{
+	
 }
 
 // -------- RPC --------

@@ -15,8 +15,8 @@ class PIXEL2D_API AChunkActor : public AActor
 public:
 	friend class AWorldHandler;
 
-	/*UPROPERTY(EditAnywhere, Category = "Componens")
-	class UTextRenderComponent* TextComponent;*/
+	UPROPERTY(EditAnywhere, Category = "Componens")
+	class UTextRenderComponent* TextComponent;
 
 #pragma region Tilesets
 
@@ -36,6 +36,9 @@ public:
 
 #pragma endregion ProceduralMeshData
 
+	UPROPERTY(ReplicatedUsing = OnRep_ChunkDataChanged)
+	FChunkData ChunkData;
+
 private:
 	UPROPERTY()
 	class AWorldHandler* WorldHandlerRef;
@@ -52,8 +55,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	class UProceduralMeshComponent* ProceduralTerrainCollisionMesh;
 
-	UPROPERTY(ReplicatedUsing = OnRep_ChunkDataChanged)
-	FChunkData ChunkData;
+	
 
 public:
 	AChunkActor(const FObjectInitializer& ObjectInitializer);
@@ -70,22 +72,29 @@ public:
 	void LoadChunk();
 
 	UFUNCTION()
+	void RefreshChunk();
+
+	UFUNCTION()
 	void RefreshCollision(int32 blockSize, int32 chunkElementCount);
 
 	UFUNCTION()
 	void RefreshCollisionV2(int32 blockSize, int32 chunkElementCount);
-
-	void ModifyBlock(FVector HitLocation, int32 DesiredBlockID);
+	
+	//UFUNCTION()
+	//void ModifyBlock(FVector HitLocation, int32 DesiredBlockID);
+	//
+	//UFUNCTION(Server, reliable)
+	//void Server_ModifyBlock(FVector HitLocation, int32 DesiredBlockID);
 
 private:
 
-	// -------- OnRep --------
+	//// -------- OnRep --------
 	UFUNCTION()
 	void OnRep_ChunkDataChanged();
 
-	// -------- RPC --------
-	UFUNCTION(Server, reliable)
-	void Server_SetChunkData(FVector HitLocation, int32 DesiredBlockID);
+	//// -------- RPC --------
+	//UFUNCTION(Server, reliable)
+	//void Server_SetChunkData(FVector HitLocation, int32 DesiredBlockID);
 
 	// getters setters
 	UFUNCTION()

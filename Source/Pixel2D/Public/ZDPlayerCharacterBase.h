@@ -219,6 +219,20 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterRotation)
 	uint8 CharacterRotation;
 
+
+public:
+
+	UFUNCTION()
+	void ModifyChunks(FPlacementData placementData);
+
+	//UFUNCTION(Server, reliable)
+	//void Server_ModifyChunks(FPlacementData placementData);
+
+	UPROPERTY()
+	class AWorldHandler* WorldHandlerRef;
+
+	//void PrintMousePositionToWorld();
+
 #pragma region Input
 private:
 
@@ -258,5 +272,5 @@ public:
 	void ShowInGameUI();
 
 #pragma endregion PlayerController
-
+	
 };

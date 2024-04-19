@@ -19,14 +19,15 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 {
 	PrimaryActorTick.bCanEverTick = true;
 	SetRootComponent(RootComponent);
+	SetReplicates(true);
 
 	AttachComponent = CreateDefaultSubobject<USceneComponent>(TEXT("AttachComponent"));
 
 	TileMapComponent = CreateDefaultSubobject<UPaperTileMapComponent>(TEXT("TileMap"));
 	TileMapComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
-	//TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComp"));
-	//TextComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComp"));
+	TextComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 	CollisionBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -45,7 +46,6 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	// Initialize TileSets
 	static ConstructorHelpers::FObjectFinder<UPaperTileSet> TileSetObject(TEXT("/Game/2DAssets/PrototypeItch/Assets/TS_Placeholder0"));
 	TileSet0 = TileSetObject.Object;
-
 }
 
 void AChunkActor::BeginPlay()
@@ -69,9 +69,10 @@ void AChunkActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 
 void AChunkActor::LoadChunk()
 {
+	TextComponent->SetText(FText::FromString(FString::Printf(TEXT("%i, %i"), ChunkData.ChunkCoordinate.X, ChunkData.ChunkCoordinate.Y)));
 
-	//TextComponent->AddRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
-	//TextComponent->AddRelativeLocation(FVector(0.0f, 1.0f, 0.0f));
+	TextComponent->AddRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
+	TextComponent->AddRelativeLocation(FVector(0.0f, 1.0f, 0.0f));
 
 	int32 blockSize = WorldHandlerRef->BlockSize;
 	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
@@ -87,9 +88,8 @@ void AChunkActor::LoadChunk()
 		for (int32 z = 0; z < chunkElementCount; z++)
 		{
 			LocalTileInfo.PackedTileIndex = ChunkData.BlockTextureID[x + (chunkElementCount * z)]; //tilesInChunk[x + (chunkElementCount * z)];
-
+			
 			TileMapComponent->SetTile(x, z, 0, LocalTileInfo);
-
 			// if (FMath::RandRange(0, 100) < 99)
 			
 		}
@@ -98,6 +98,29 @@ void AChunkActor::LoadChunk()
 	CollisionBoxComponent->SetBoxExtent(FVector(WorldHandlerRef->ChunkSize * 0.5f, 20.0f, WorldHandlerRef->ChunkSize * 0.5f));
 	CollisionBoxComponent->SetRelativeLocation(FVector(WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(WorldHandlerRef->ChunkSize) * 0.5f));
 	
+	RefreshCollisionV2(blockSize, chunkElementCount);
+}
+
+void AChunkActor::RefreshChunk()
+{
+	int32 blockSize = WorldHandlerRef->BlockSize;
+	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
+
+	FPaperTileInfo LocalTileInfo;
+	LocalTileInfo.TileSet = TileSet0;
+
+	for (int32 x = 0; x < chunkElementCount; x++)
+	{
+		for (int32 z = 0; z < chunkElementCount; z++)
+		{
+			LocalTileInfo.PackedTileIndex = ChunkData.BlockTextureID[x + (chunkElementCount * z)]; //tilesInChunk[x + (chunkElementCount * z)];
+
+			TileMapComponent->SetTile(x, z, 0, LocalTileInfo);
+			// if (FMath::RandRange(0, 100) < 99)
+
+		}
+	}
+
 	RefreshCollisionV2(blockSize, chunkElementCount);
 }
 
@@ -287,26 +310,44 @@ void AChunkActor::RefreshCollisionV2(int32 blockSize, int32 chunkElementCount)
 	ProceduralTerrainCollisionMesh->CreateMeshSection(0, VerticesTerrain, TrianglesTerrain, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), true);
 }
 
-void AChunkActor::ModifyBlock(FVector HitLocation, int32 DesiredBlockID)
-{
-	int32 blockSize = WorldHandlerRef->BlockSize;
-	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
+//void AChunkActor::ModifyBlock(FVector HitLocation, FPlacementData changeData)
+//{
+//	if (HasAuthority())
+//	{
+//		int32 blockSize = WorldHandlerRef->BlockSize;
+//		int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
+//
+//		FPaperTileInfo LocalTileInfo;
+//		LocalTileInfo.TileSet = TileSet0;
+//		LocalTileInfo.PackedTileIndex = 5; //336 - brick, 5 - air // DesiredBlockID;
+//
+//		for (int32 x = 0; x < changeData.Dimensions.X; x++)
+//		{
+//			for (int32 z = 0; z < changeData.Dimensions.Y ; z++)
+//			{
+//
+//			}
+//		}
+//
+//		int32 BlockToChangeX = FMath::Floor(HitLocation.X / blockSize);
+//		int32 BlockToChangeZ = FMath::Floor(HitLocation.Z / blockSize);
+//
+//		ChunkData.BlockTextureID[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 5; //DesiredBlockID;
+//		ChunkData.bHasCollision[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 0;
+//		RefreshCollisionV2(blockSize, chunkElementCount);
+//
+//		TileMapComponent->SetTile(BlockToChangeX, BlockToChangeZ, 0, LocalTileInfo);
+//	}
+//	else
+//	{
+//		Server_ModifyBlock(HitLocation, DesiredBlockID);
+//	}
+//}
 
-	FPaperTileInfo LocalTileInfo;
-	LocalTileInfo.TileSet = TileSet0;
-	LocalTileInfo.PackedTileIndex = 5; //336 - brick, 5 - air // DesiredBlockID;
-
-	int32 BlockToChangeX = FMath::Floor(HitLocation.X / blockSize);
-	int32 BlockToChangeZ = FMath::Floor(HitLocation.Z / blockSize);
-
-	ChunkData.BlockTextureID[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 5; //DesiredBlockID;
-	ChunkData.bHasCollision[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 0;
-	RefreshCollisionV2(blockSize, chunkElementCount);
-
-	TileMapComponent->SetTile(BlockToChangeX, BlockToChangeZ, 0, LocalTileInfo);
-
-	//Server_SetChunkData(HitLocation, DesiredBlockID);
-}
+//void AChunkActor::Server_ModifyBlock_Implementation(FVector HitLocation, int32 DesiredBlockID)
+//{
+//	ModifyBlock(HitLocation, DesiredBlockID);
+//}
 
 //TArray<int32> AChunkActor::GetBlockTextureIDByChunkCoordinate(const FIntPoint& TargetChunkCoordinate)
 //{
@@ -325,44 +366,50 @@ void AChunkActor::ModifyBlock(FVector HitLocation, int32 DesiredBlockID)
 //	return TArray<int32>();
 //}
 
-// -------- OnRep --------
-#pragma region OnRep
-
-void AChunkActor::OnRep_ChunkDataChanged()
-{
-	RefreshCollisionV2(WorldHandlerRef->BlockSize, WorldHandlerRef->ChunkElementCount);
-
-}
-
-void AChunkActor::Server_SetChunkData_Implementation(FVector HitLocation, int32 DesiredBlockID)
-{
-	if (HasAuthority())
-	{
-		int32 blockSize = WorldHandlerRef->BlockSize;
-		int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
-
-		FPaperTileInfo LocalTileInfo;
-		LocalTileInfo.TileSet = TileSet0;
-		LocalTileInfo.PackedTileIndex = 336; // DesiredBlockID;
-
-		int32 BlockToChangeX = FMath::Floor(HitLocation.X / blockSize);
-		int32 BlockToChangeZ = FMath::Floor(HitLocation.Z / blockSize);
-
-		ChunkData.BlockTextureID[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 336;  //DesiredBlockID;
-		ChunkData.bHasCollision[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 1;
-	}
-}
-
-#pragma endregion OnRep
+// //-------- OnRep --------
+//#pragma region OnRep
+//
+//void AChunkActor::OnRep_ChunkDataChanged()
+//{
+//	//RefreshCollisionV2(WorldHandlerRef->BlockSize, WorldHandlerRef->ChunkElementCount);
+//	LoadChunk();
+//}
+//
+//void AChunkActor::Server_SetChunkData_Implementation(FVector HitLocation, int32 DesiredBlockID)
+//{
+//	if (HasAuthority())
+//	{
+//		int32 blockSize = WorldHandlerRef->BlockSize;
+//		int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
+//
+//		FPaperTileInfo LocalTileInfo;
+//		LocalTileInfo.TileSet = TileSet0;
+//		LocalTileInfo.PackedTileIndex = 336; // DesiredBlockID;
+//
+//		int32 BlockToChangeX = FMath::Floor(HitLocation.X / blockSize);
+//		int32 BlockToChangeZ = FMath::Floor(HitLocation.Z / blockSize);
+//
+//		ChunkData.BlockTextureID[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 336;  //DesiredBlockID;
+//		ChunkData.bHasCollision[BlockToChangeX + (BlockToChangeZ * chunkElementCount)] = 1;
+//	}
+//}
+//
+//#pragma endregion OnRep
 
 
 
 // -------- SettersGetters --------
 #pragma region SettersGetters
 
+void AChunkActor::OnRep_ChunkDataChanged()
+{
+	RefreshChunk();
+}
+
 void AChunkActor::SetFChunkData(FChunkData data)
 {
 	ChunkData = data;
+	RefreshChunk();
 }
 
 #pragma endregion SettersGetters

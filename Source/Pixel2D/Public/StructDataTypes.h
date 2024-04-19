@@ -35,6 +35,33 @@ struct PIXEL2D_API FChunkData
 };
 
 /**
+*	ChunkChangeData
+*/
+USTRUCT(BlueprintType)
+struct PIXEL2D_API FChunkChangeData
+{
+	GENERATED_USTRUCT_BODY()
+
+	FIntPoint ChunkCoordinate;
+	TArray<int32> BlockIdx;
+	TArray<int32> BlockTextureID;
+	TArray<uint8> bHasCollision;
+};
+
+/**
+*	PlacementData
+*/
+USTRUCT(BlueprintType)
+struct PIXEL2D_API FPlacementData
+{
+	GENERATED_USTRUCT_BODY()
+
+	FIntPoint Dimensions;
+	TArray<int32> BlockTextureID;
+	TArray<uint8> bHasCollision;
+};
+
+/**
 *	PickupInfo
 */
 USTRUCT(BlueprintType)

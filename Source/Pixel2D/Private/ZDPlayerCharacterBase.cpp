@@ -204,36 +204,27 @@ void AZDPlayerCharacterBase::Look(const FInputActionValue& Value)
 
 void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase::PrimaryClick()"));
-	FVector WorldLocation, WorldDirection;
-	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	if (PlayerController)
-	{
-		PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
-	}
+	
+	FPlacementData testData;
 
-	FVector Start = WorldLocation;
-	FVector End = Start + WorldDirection * 1000;
+	FIntPoint dimensions = FIntPoint(2, 2);
+	TArray<int32> blockTextureID;
+		blockTextureID.Add(443);
+		blockTextureID.Add(444);
+		blockTextureID.Add(468);
+		blockTextureID.Add(469);
+	TArray<uint8> bHasCollisiontemp;
+		bHasCollisiontemp.Add(1);
+		bHasCollisiontemp.Add(1);
+		bHasCollisiontemp.Add(1);
+		bHasCollisiontemp.Add(1);
 
-	FCollisionQueryParams TraceParams(FName(TEXT("LineTrace")), true, this);
-	TraceParams.bTraceComplex = true;
-	FHitResult HitResult;
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, TraceParams);
+	testData.Dimensions = dimensions;
+	testData.BlockTextureID = blockTextureID;
+	testData.bHasCollision = bHasCollisiontemp;
 
-	if (bHit)
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase:: -- bHit"));
-		if (HitResult.GetActor()->IsA(AChunkActor::StaticClass()))
-		{
-			AChunkActor* Chunk = Cast<AChunkActor>(HitResult.GetActor());
-			if (Chunk)
-			{
-				//GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("AZDPlayerCharacterBase:: -- Chunk"));
-				FVector HitRelativeLocationToChunk = FVector(FMath::Abs(Chunk->GetActorLocation().X - Start.X), 0.0f, FMath::Abs(Chunk->GetActorLocation().Z - Start.Z));
-				Chunk->ModifyBlock(HitRelativeLocationToChunk, 16);
-			}
-		}
-	}
+		ModifyChunks(testData);
+	
 }
 
 void AZDPlayerCharacterBase::InventoryOpenClose(const FInputActionValue& Value)
@@ -294,6 +285,209 @@ void AZDPlayerCharacterBase::OnRep_CharacterRotation()
 void AZDPlayerCharacterBase::OnRep_EquippedWeapon()
 {
 }
+
+//void AZDPlayerCharacterBase::PrintMousePositionToWorld()
+//{
+//	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+//	if (PlayerController)
+//	{
+//		// Variables to hold mouse position
+//		float MouseX, MouseY;
+//		if (PlayerController->GetMousePosition(MouseX, MouseY))
+//		{
+//			FVector WorldLocation, WorldDirection;
+//			// Convert the mouse position to a world space position and direction
+//			if (PlayerController->DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection))
+//			{
+//				if (GEngine)
+//				{
+//					// Format the string to display
+//					FString ScreenMessage = FString::Printf(TEXT("Mouse World Pos: %s, Dir: %s"),
+//						*WorldLocation.ToString(), *WorldDirection.ToString());
+//
+//					// Display the message on the screen
+//					GEngine->AddOnScreenDebugMessage(-1, 0.016f, FColor::Yellow, ScreenMessage);
+//				}
+//			}
+//		}
+//	}
+//}
+
+void AZDPlayerCharacterBase::ModifyChunks(FPlacementData placementData)
+{
+	if (!WorldHandlerRef)
+	{
+		return;
+	}
+
+	/*if (HasAuthority())
+	{*/
+	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
+	int32 chunkSize = WorldHandlerRef->ChunkSize;
+	int32 blockSize = WorldHandlerRef->BlockSize;
+
+	FVector WorldLocation, WorldDirection;
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
+	{
+		PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection);
+	}
+
+	int32 mousePosX = WorldLocation.X + WorldHandlerRef->ChunkSize / 2;
+	int32 mousePosZ = WorldLocation.Z - WorldHandlerRef->ChunkSize / 2;
+
+	//FIntPoint chunkCoord = FIntPoint(WorldLocation.X / WorldHandlerRef->ChunkSize, WorldLocation.Z / WorldHandlerRef->ChunkSize);
+	FIntPoint chunkCoord = FIntPoint(mousePosX / WorldHandlerRef->ChunkSize, mousePosZ / WorldHandlerRef->ChunkSize);
+
+	TArray<FChunkChangeData> chunksToUpdate;
+
+	int32 blockStartX;
+	int32 blockStopX;
+	int32 remainBlocksX; //= (placementData.Dimensions.X - blockStopX) <= 0 ? 0 : placementData.Dimensions.X - blockStopX;
+
+		if (mousePosX >= 0)
+		{
+			blockStartX = (mousePosX % chunkSize) / blockSize;
+		}
+		else
+		{
+			blockStartX = (chunkElementCount - (FMath::Abs(mousePosX) % chunkSize) / blockSize) - 1;
+			/*blockStopX = ((-mousePosX % chunkSize) / blockSize) + 1;*/
+		}
+
+		if ((blockStartX + placementData.Dimensions.X) <= (chunkElementCount - 1))
+		{
+			blockStopX = blockStartX + placementData.Dimensions.X - 1;
+			remainBlocksX = 0;
+		}
+		else
+		{
+			blockStopX = chunkElementCount - 1; //(chunkElementCount - (mousePosX % chunkSize) / blockSize) + 1;
+			remainBlocksX = placementData.Dimensions.X - (blockStopX - blockStartX) - 1;
+		}
+
+	int32 blockStartZ;
+	int32 blockStopZ;
+	int32 remainBlocksZ; // = (placementData.Dimensions.Y - blockStopX) <= 0 ? 0 : placementData.Dimensions.Y - blockStopX;
+
+		//if (mousePosZ >= 0)
+		//{
+		//	blockStartZ = (mousePosZ % chunkSize) / blockSize;
+		//	//blockStopZ = (chunkElementCount - (mousePosZ % chunkSize) / blockSize) + 1;
+		//}
+		//else
+		//{
+		//	blockStartZ = (chunkElementCount - (-mousePosZ % chunkSize) / blockSize);
+		//	//blockStopZ = ((-mousePosZ % chunkSize) / blockSize) + 1;
+		//}
+
+		//if ((blockStartZ + placementData.Dimensions.Y) <= (chunkElementCount - 1))
+		//{
+		//	blockStopZ = blockStartZ + placementData.Dimensions.Y;
+		//}
+		//else
+		//{
+		//	blockStopZ = chunkElementCount - 1;
+		//	remainBlocksZ = placementData.Dimensions.Y - (blockStopZ - blockStartZ);
+		//}
+
+		if (mousePosZ <= 0)
+		{
+			blockStartZ = (FMath::Abs(mousePosZ) % chunkSize) / blockSize;
+			//blockStopZ = (chunkElementCount - (mousePosZ % chunkSize) / blockSize) + 1;
+		}
+		else
+		{
+			blockStartZ = (chunkElementCount - (mousePosZ % chunkSize) / blockSize) - 1;
+			//blockStopZ = ((-mousePosZ % chunkSize) / blockSize) + 1;
+		}
+
+		if ((blockStartZ + placementData.Dimensions.Y) <= (chunkElementCount - 1))
+		{
+			blockStopZ = blockStartZ + placementData.Dimensions.Y - 1;
+			remainBlocksZ = 0;
+		}
+		else
+		{
+			blockStopZ = chunkElementCount - 1;
+			remainBlocksZ = placementData.Dimensions.Y - (blockStopZ - blockStartZ) - 1;
+		}
+
+		/*GEngine->AddOnScreenDebugMessage(-1, 100.3f, FColor::Red, FString::Printf(TEXT("blockStartX: %d"), blockStartX));
+		GEngine->AddOnScreenDebugMessage(-1, 100.3f, FColor::Red, FString::Printf(TEXT("blockStopX: %d"), blockStopX));
+		GEngine->AddOnScreenDebugMessage(-1, 100.3f, FColor::Red, FString::Printf(TEXT("remainBlocksX: %d"), remainBlocksX));
+		GEngine->AddOnScreenDebugMessage(-1, 100.3f, FColor::Red, FString::Printf(TEXT("blockStartZ: %d"), blockStartZ));
+		GEngine->AddOnScreenDebugMessage(-1, 100.3f, FColor::Red, FString::Printf(TEXT("blockStopZ: %d"), blockStopZ));
+		GEngine->AddOnScreenDebugMessage(-1, 100.3f, FColor::Red, FString::Printf(TEXT("remainBlocksZ: %d"), remainBlocksZ)); */
+
+	FChunkChangeData chunkChange;
+
+
+	chunkChange.ChunkCoordinate = chunkCoord;
+
+	int32 placementX = 0;
+	for (int32 x = blockStartX; x <= blockStopX; x++)
+	{
+		int32 placementZ = 0;
+		for (int32 z = blockStartZ; z <= blockStopZ ; z++)
+		{
+			int32 cIdx = x + z * chunkElementCount;
+			int32 pIdx = placementX + (placementZ * (placementData.Dimensions.Y));
+
+			chunkChange.BlockIdx.Add(cIdx);
+			chunkChange.BlockTextureID.Add(placementData.BlockTextureID[pIdx]);
+			chunkChange.bHasCollision.Add(placementData.bHasCollision[pIdx]);
+			placementZ++;
+		}
+		placementX++;
+	}
+
+	//for (int32 x = 0; x < 1; x++)
+	//{
+	//	for (int32 z = 0; z < 1; z++)
+	//	{
+	//		int32 cIdx = x + z * chunkElementCount;
+	//		int32 pIdx = placementZ + (placementX * placementData.Dimensions.Y - 1);
+
+	//		chunkChange.BlockTextureID[cIdx] = placementData.BlockTextureID[0];
+	//		chunkChange.bHasCollision[cIdx] = placementData.bHasCollision[0];
+	//		placementZ++;
+	//	}
+	//	placementX++;
+	//}
+
+	chunksToUpdate.Add(chunkChange);
+
+	WorldHandlerRef->UpdateWorldData(chunksToUpdate);
+
+	/*FCollisionQueryParams TraceParams(FName(TEXT("LineTrace")), true, this);
+	TraceParams.bTraceComplex = true;
+	FHitResult HitResult;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, TraceParams);
+
+	if (bHit)
+	{
+		if (HitResult.GetActor()->IsA(AChunkActor::StaticClass()))
+		{
+			AChunkActor* Chunk = Cast<AChunkActor>(HitResult.GetActor());
+			if (Chunk)
+			{
+				FVector HitRelativeLocationToChunk = FVector(FMath::Abs(Chunk->GetActorLocation().X - Start.X), 0.0f, FMath::Abs(Chunk->GetActorLocation().Z - Start.Z));
+				Chunk->ModifyBlock(HitRelativeLocationToChunk, 16);
+			}
+		}
+	}*/
+	/*}
+	else
+	{
+		Server_ModifyChunks(placementData);
+	}*/
+}
+
+//void AZDPlayerCharacterBase::Server_ModifyChunks_Implementation(FPlacementData placementData)
+//{
+//	ModifyChunks(placementData);
+//}
 
 void AZDPlayerCharacterBase::ClientShowNotification_Implementation(const FText& Message)
 {
