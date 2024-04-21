@@ -324,6 +324,7 @@ void AZDPlayerCharacterBase::ModifyChunks(FPlacementData placementData)
 	{*/
 	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
 	int32 chunkSize = WorldHandlerRef->ChunkSize;
+	int32 chunkSizeHalf = WorldHandlerRef->ChunkSizeHalf;
 	int32 blockSize = WorldHandlerRef->BlockSize;
 
 	FVector WorldLocation, WorldDirection;
@@ -334,10 +335,19 @@ void AZDPlayerCharacterBase::ModifyChunks(FPlacementData placementData)
 	}
 
 	int32 mousePosX = WorldLocation.X + WorldHandlerRef->ChunkSize / 2;
-	int32 mousePosZ = WorldLocation.Z - WorldHandlerRef->ChunkSize / 2;
+	int32 mousePosZ = WorldLocation.Z + WorldHandlerRef->ChunkSize / 2;
 
 	//FIntPoint chunkCoord = FIntPoint(WorldLocation.X / WorldHandlerRef->ChunkSize, WorldLocation.Z / WorldHandlerRef->ChunkSize);
-	FIntPoint chunkCoord = FIntPoint(mousePosX / WorldHandlerRef->ChunkSize, mousePosZ / WorldHandlerRef->ChunkSize);
+	//FIntPoint chunkCoord = FIntPoint(FMath::Floor((mousePosX - chunkSizeHalf) / chunkSize), FMath::Floor((mousePosZ + chunkSizeHalf) / chunkSize));
+	FIntPoint chunkCoord = FIntPoint(FMath::Floor((mousePosX) / chunkSize), FMath::Floor((mousePosZ) / chunkSize));
+
+	//int32 coordX;
+	//int32 coordZ;
+
+	/*mousePosX < 0 ? coordX = (FMath::Abs(mousePosX) % WorldHandlerRef->ChunkSize) * (-1) - 1 : coordX = mousePosX % WorldHandlerRef->ChunkSize;
+	mousePosZ < 0 ? coordZ = (FMath::Abs(mousePosZ) % WorldHandlerRef->ChunkSize) * (-1) : coordZ = mousePosZ % WorldHandlerRef->ChunkSize;*/
+
+	//FIntPoint chunkCoord = FIntPoint(coordX, coordZ);
 
 	TArray<FChunkChangeData> chunksToUpdate;
 
@@ -441,22 +451,89 @@ void AZDPlayerCharacterBase::ModifyChunks(FPlacementData placementData)
 		}
 		placementX++;
 	}
-
-	//for (int32 x = 0; x < 1; x++)
-	//{
-	//	for (int32 z = 0; z < 1; z++)
-	//	{
-	//		int32 cIdx = x + z * chunkElementCount;
-	//		int32 pIdx = placementZ + (placementX * placementData.Dimensions.Y - 1);
-
-	//		chunkChange.BlockTextureID[cIdx] = placementData.BlockTextureID[0];
-	//		chunkChange.bHasCollision[cIdx] = placementData.bHasCollision[0];
-	//		placementZ++;
-	//	}
-	//	placementX++;
-	//}
-
+	
 	chunksToUpdate.Add(chunkChange);
+
+	if (remainBlocksX)
+	{	
+		chunkChange.ChunkCoordinate = FIntPoint(chunkCoord.X + 1, chunkCoord.Y);
+		chunkChange.BlockIdx.Empty();
+		chunkChange.BlockTextureID.Empty();
+		chunkChange.bHasCollision.Empty();
+		
+		for (int32 x = 0; x <= remainBlocksX - 1; x++)
+		{
+			int32 placementZ = 0;
+			for (int32 z = blockStartZ; z <= blockStopZ; z++)
+			{
+				int32 cIdx = x + z * chunkElementCount;
+				int32 pIdx = placementX + (placementZ * (placementData.Dimensions.Y));
+
+				chunkChange.BlockIdx.Add(cIdx);
+				chunkChange.BlockTextureID.Add(placementData.BlockTextureID[pIdx]);
+				chunkChange.bHasCollision.Add(placementData.bHasCollision[pIdx]);
+				placementZ++;
+			}
+			placementX++;
+		}
+
+		chunksToUpdate.Add(chunkChange);
+	}
+
+	if (remainBlocksZ/* && remainBlocksX*/)
+	{
+		blockStopZ = remainBlocksZ - 1;
+
+		chunkChange.ChunkCoordinate = FIntPoint(chunkCoord.X, chunkCoord.Y - 1);
+		chunkChange.BlockIdx.Empty();
+		chunkChange.BlockTextureID.Empty();
+		chunkChange.bHasCollision.Empty();
+
+		for (int32 x = blockStartX; x <= blockStopX; x++)
+		{
+			int32 placementZ = 0;
+			for (int32 z = 0; z <= remainBlocksZ - 1; z++)
+			{
+				int32 cIdx = x + z * chunkElementCount;
+				int32 pIdx = placementX + (placementZ * (placementData.Dimensions.Y));
+
+				chunkChange.BlockIdx.Add(cIdx);
+				chunkChange.BlockTextureID.Add(placementData.BlockTextureID[pIdx]);
+				chunkChange.bHasCollision.Add(placementData.bHasCollision[pIdx]);
+				placementZ++;
+			}
+			placementX++;
+		}
+
+		chunksToUpdate.Add(chunkChange);
+	}
+
+	if (remainBlocksX && remainBlocksX)
+	{
+		chunkChange.ChunkCoordinate = FIntPoint(chunkCoord.X + 1, chunkCoord.Y);
+		chunkChange.BlockIdx.Empty();
+		chunkChange.BlockTextureID.Empty();
+		chunkChange.bHasCollision.Empty();
+
+		for (int32 x = 0; x <= remainBlocksX - 1; x++)
+		{
+			int32 placementZ = 0;
+			for (int32 z = 0; z <= remainBlocksZ - 1; z++)
+			{
+				int32 cIdx = x + z * chunkElementCount;
+				int32 pIdx = placementX + (placementZ * (placementData.Dimensions.Y));
+
+				chunkChange.BlockIdx.Add(cIdx);
+				chunkChange.BlockTextureID.Add(placementData.BlockTextureID[pIdx]);
+				chunkChange.bHasCollision.Add(placementData.bHasCollision[pIdx]);
+				placementZ++;
+			}
+			placementX++;
+		}
+
+		chunksToUpdate.Add(chunkChange);
+	}
+	
 
 	WorldHandlerRef->UpdateWorldData(chunksToUpdate);
 

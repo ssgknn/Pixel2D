@@ -225,7 +225,7 @@ void AWorldHandler::UpdateWorldData(TArray<FChunkChangeData> chunksToUpdate)
 				for (int32 blockID = 0; blockID < chunksToUpdate[idx].BlockIdx.Num(); blockID++)
 				{
 					ChunkToUpdate.BlockTextureID[chunksToUpdate[idx].BlockIdx[blockID]] = chunksToUpdate[idx].BlockTextureID[blockID];
-					ChunkToUpdate.BlockTextureID[chunksToUpdate[idx].bHasCollision[blockID]] = chunksToUpdate[idx].bHasCollision[blockID];
+					ChunkToUpdate.bHasCollision[chunksToUpdate[idx].bHasCollision[blockID]] = chunksToUpdate[idx].bHasCollision[blockID];
 				}
 
 				if (IsChunkExists(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y))
