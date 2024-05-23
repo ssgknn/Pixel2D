@@ -219,11 +219,16 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterRotation)
 	uint8 CharacterRotation;
 
-
+	
+//Chunk
 public:
 
 	UFUNCTION()
-	void ModifyChunks(FPlacementData placementData);
+	void CalculateChunkModification(FPlacementData placementData);
+
+
+	UFUNCTION(Server, Reliable)
+	void Server_RequestRegionUpdate(const TArray<FChunkChangeData>& chunksToUpdate);
 
 	//UFUNCTION(Server, reliable)
 	//void Server_ModifyChunks(FPlacementData placementData);

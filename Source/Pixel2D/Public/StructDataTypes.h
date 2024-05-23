@@ -22,6 +22,8 @@ class PIXEL2D_API UStructDataTypes : public UObject
 
 /**
 *	ChunkData
+* 
+*	To holds chunks data informations.
 */
 USTRUCT(BlueprintType)
 struct PIXEL2D_API FChunkData
@@ -36,20 +38,31 @@ struct PIXEL2D_API FChunkData
 
 /**
 *	ChunkChangeData
+* 
+*	To hold chunk data change in small size. Only the changes are stored.
 */
 USTRUCT(BlueprintType)
 struct PIXEL2D_API FChunkChangeData
 {
 	GENERATED_USTRUCT_BODY()
 
+	UPROPERTY()
 	FIntPoint ChunkCoordinate;
+
+	UPROPERTY()
 	TArray<int32> BlockIdx;
+
+	UPROPERTY()
 	TArray<int32> BlockTextureID;
+
+	UPROPERTY()
 	TArray<uint8> bHasCollision;
 };
 
 /**
 *	PlacementData
+* 
+*	Template for each placeable object.
 */
 USTRUCT(BlueprintType)
 struct PIXEL2D_API FPlacementData
@@ -63,6 +76,8 @@ struct PIXEL2D_API FPlacementData
 
 /**
 *	PickupInfo
+* 
+*  For store pickups in the world.
 */
 USTRUCT(BlueprintType)
 struct PIXEL2D_API FPickupData

@@ -16,6 +16,7 @@
 #include "PaperTileMapComponent.h"
 #include "PaperTileMap.h"
 #include "Net/UnrealNetwork.h"
+#include "EngineUtils.h"
 
 #include "Pickup.h"
 #include "Item.h"
@@ -128,8 +129,17 @@ void AZDPlayerCharacterBase::BeginPlay()
 	PlayerMesh->SetMaterial(10, MI_BackPack);
 	PlayerMaterials.Add(EEquippableSlot::EIS_Backpack, MI_BackPack);
 
-
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
+
+	for (TActorIterator<AWorldHandler> It(GetWorld()); It; ++It)
+	{
+		AWorldHandler* FoundHandler = *It;
+		if (FoundHandler)
+		{
+			WorldHandlerRef = FoundHandler;
+			break;
+		}
+	}
 }
 
 void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -223,7 +233,7 @@ void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 	testData.BlockTextureID = blockTextureID;
 	testData.bHasCollision = bHasCollisiontemp;
 
-		ModifyChunks(testData);
+		CalculateChunkModification(testData);
 	
 }
 
@@ -313,7 +323,8 @@ void AZDPlayerCharacterBase::OnRep_EquippedWeapon()
 //	}
 //}
 
-void AZDPlayerCharacterBase::ModifyChunks(FPlacementData placementData)
+
+void AZDPlayerCharacterBase::CalculateChunkModification(FPlacementData placementData)
 {
 	if (!WorldHandlerRef)
 	{
@@ -480,7 +491,7 @@ void AZDPlayerCharacterBase::ModifyChunks(FPlacementData placementData)
 		chunksToUpdate.Add(chunkChange);
 	}
 
-	if (remainBlocksZ/* && remainBlocksX*/)
+	if (remainBlocksZ)
 	{
 		blockStopZ = remainBlocksZ - 1;
 
@@ -510,7 +521,7 @@ void AZDPlayerCharacterBase::ModifyChunks(FPlacementData placementData)
 
 	if (remainBlocksX && remainBlocksX)
 	{
-		chunkChange.ChunkCoordinate = FIntPoint(chunkCoord.X + 1, chunkCoord.Y);
+		chunkChange.ChunkCoordinate = FIntPoint(chunkCoord.X + 1, chunkCoord.Y - 1);
 		chunkChange.BlockIdx.Empty();
 		chunkChange.BlockTextureID.Empty();
 		chunkChange.bHasCollision.Empty();
@@ -535,36 +546,23 @@ void AZDPlayerCharacterBase::ModifyChunks(FPlacementData placementData)
 	}
 	
 
-	WorldHandlerRef->UpdateWorldData(chunksToUpdate);
-
-	/*FCollisionQueryParams TraceParams(FName(TEXT("LineTrace")), true, this);
-	TraceParams.bTraceComplex = true;
-	FHitResult HitResult;
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, TraceParams);
-
-	if (bHit)
+	if (HasAuthority())
 	{
-		if (HitResult.GetActor()->IsA(AChunkActor::StaticClass()))
-		{
-			AChunkActor* Chunk = Cast<AChunkActor>(HitResult.GetActor());
-			if (Chunk)
-			{
-				FVector HitRelativeLocationToChunk = FVector(FMath::Abs(Chunk->GetActorLocation().X - Start.X), 0.0f, FMath::Abs(Chunk->GetActorLocation().Z - Start.Z));
-				Chunk->ModifyBlock(HitRelativeLocationToChunk, 16);
-			}
-		}
-	}*/
-	/*}
+		WorldHandlerRef->UpdateRegionData(chunksToUpdate);
+	}
 	else
 	{
-		Server_ModifyChunks(placementData);
-	}*/
+		Server_RequestRegionUpdate(chunksToUpdate);
+	}
+
 }
 
-//void AZDPlayerCharacterBase::Server_ModifyChunks_Implementation(FPlacementData placementData)
-//{
-//	ModifyChunks(placementData);
-//}
+void AZDPlayerCharacterBase::Server_RequestRegionUpdate_Implementation(const TArray<FChunkChangeData>& ChunkChangeData)
+{
+	WorldHandlerRef->UpdateRegionData(ChunkChangeData);
+}
+
+
 
 void AZDPlayerCharacterBase::ClientShowNotification_Implementation(const FText& Message)
 {

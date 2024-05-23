@@ -19,7 +19,7 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 {
 	PrimaryActorTick.bCanEverTick = true;
 	SetRootComponent(RootComponent);
-	SetReplicates(true);
+	//SetReplicates(true);
 
 	AttachComponent = CreateDefaultSubobject<USceneComponent>(TEXT("AttachComponent"));
 
@@ -60,12 +60,12 @@ void AChunkActor::Tick(float DeltaTime)
 
 }
 
-void AChunkActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AChunkActor, ChunkData);
-}
+//void AChunkActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+//{
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//
+//	DOREPLIFETIME(AChunkActor, ChunkData);
+//}
 
 void AChunkActor::LoadChunk()
 {
@@ -403,13 +403,11 @@ void AChunkActor::RefreshCollisionV2(int32 blockSize, int32 chunkElementCount)
 
 void AChunkActor::OnRep_ChunkDataChanged()
 {
-	RefreshChunk();
 }
 
 void AChunkActor::SetFChunkData(FChunkData data)
 {
 	ChunkData = data;
-	RefreshChunk();
 }
 
 #pragma endregion SettersGetters

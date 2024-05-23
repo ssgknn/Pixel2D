@@ -19,10 +19,13 @@ public:
 #pragma region DataVariables
 
 	// ChunkDATA
-	UPROPERTY(ReplicatedUsing = OnRep_WorldDataChanged)
-	TArray<FChunkData> WorldDATA;
+	UPROPERTY()
+	TArray<FChunkData> RegionData;
 
-	// Chunk
+	UPROPERTY(ReplicatedUsing = OnRep_RegionDataChanged)
+	TArray<FChunkChangeData> ChunkDataChange;
+	
+	// Chunk properties
 	UPROPERTY()
 	int32 RenderRange;
 
@@ -99,6 +102,9 @@ public:
 	UFUNCTION()
 	void AddChunks();
 
+	//UFUNCTION(Server, Reliable)
+	//void Server_AddChunks();
+
 	UFUNCTION()
 	uint8 IsChunkExists(const int32 X, const int32 Y);
 
@@ -110,10 +116,13 @@ public:
 	void Server_SpawnPickup(FPickupData PickupData);
 
 	UFUNCTION()
-	void UpdateWorldData(TArray<FChunkChangeData> chunksToUpdate);
+	void UpdateRegionData(TArray<FChunkChangeData> chunksToUpdate);
 
-	UFUNCTION(Server, Reliable)
-	void Server_UpdateWorldData(const TArray<FChunkChangeData>& chunksToUpdate);
+	/*UFUNCTION(Server, Reliable)
+	void Server_UpdateRegionData(const TArray<FChunkChangeData>& chunksToUpdate);*/
+
+	UFUNCTION()
+	void OnRep_RegionDataChanged();
 
 	//UFUNCTION(Client, Reliable)
 	//void Client_UpdateWorldData(TArray<FChunkData> chunksToUpdate);
@@ -130,10 +139,10 @@ private:
 
 	void RemoveChunks();
 
+	/*UFUNCTION(Server, Reliable)
+	void Server_RemoveChunks();*/
+
 	void RefreshChunks();
 
 	FIntPoint GetChunkCoordPlayerAt();
-
-	UFUNCTION()
-	void OnRep_WorldDataChanged();
 };

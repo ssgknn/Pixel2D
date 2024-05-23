@@ -36,7 +36,7 @@ public:
 
 #pragma endregion ProceduralMeshData
 
-	UPROPERTY(ReplicatedUsing = OnRep_ChunkDataChanged)
+	UPROPERTY(/*ReplicatedUsing = OnRep_ChunkDataChanged*/)
 	FChunkData ChunkData;
 
 private:
@@ -61,7 +61,7 @@ public:
 	AChunkActor(const FObjectInitializer& ObjectInitializer);
 
 	virtual void Tick(float DeltaTime) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	//virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	virtual void BeginPlay() override;
