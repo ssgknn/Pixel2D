@@ -131,15 +131,11 @@ void AZDPlayerCharacterBase::BeginPlay()
 
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
 
-	for (TActorIterator<AWorldHandler> It(GetWorld()); It; ++It)
-	{
-		AWorldHandler* FoundHandler = *It;
-		if (FoundHandler)
-		{
-			WorldHandlerRef = FoundHandler;
-			break;
-		}
-	}
+
+	// SET VARIABLES
+	InitializeChunkVariables();
+
+
 }
 
 void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -167,10 +163,16 @@ void AZDPlayerCharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	/*
-	float velocity = GetCharacterMovement()->Velocity.Z;
-	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));
-	*/
+	if (ShouldRequestChunkLoad())
+	{
+		RequestChunkLoad(PlayerID, CenterChunkCoords);
+	}
+	
+	
+	/*float velocity = GetCharacterMovement()->Velocity.Z;
+	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));*/
+	
+
 }
 
 void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
@@ -239,6 +241,23 @@ void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 
 void AZDPlayerCharacterBase::InventoryOpenClose(const FInputActionValue& Value)
 {
+}
+
+void AZDPlayerCharacterBase::DEBUG_Key()
+{
+	//DEBUG
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AChunkActor::StaticClass(), FoundActors);
+
+	for (AActor* Actor : FoundActors)
+	{
+		AChunkActor* ChunkActor = Cast<AChunkActor>(Actor);
+		if (ChunkActor)
+		{
+			UE_LOG(LogTemp, Log, TEXT("ChunkActor Found: %s"), *ChunkActor->GetName());
+		}
+	}
 }
 
 
@@ -324,6 +343,29 @@ void AZDPlayerCharacterBase::OnRep_EquippedWeapon()
 //}
 
 
+void AZDPlayerCharacterBase::InitializeChunkVariables()
+{
+	for (TActorIterator<AWorldHandler> It(GetWorld()); It; ++It)
+	{
+		AWorldHandler* FoundHandler = *It;
+		if (FoundHandler)
+		{
+			WorldHandlerRef = FoundHandler;
+			break;
+		}
+	}
+
+	ChunkSize_player = WorldHandlerRef->ChunkSize;
+	ChunkSizeHalf_player = WorldHandlerRef->ChunkSizeHalf;
+
+	WorldHandlerRef->Server_RegisterPlayerID(this);
+}
+
+void AZDPlayerCharacterBase::SetPlayerID(uint8 ID)
+{
+	PlayerID = ID;
+}
+
 void AZDPlayerCharacterBase::CalculateChunkModification(FPlacementData placementData)
 {
 	if (!WorldHandlerRef)
@@ -352,6 +394,14 @@ void AZDPlayerCharacterBase::CalculateChunkModification(FPlacementData placement
 	//FIntPoint chunkCoord = FIntPoint(FMath::Floor((mousePosX - chunkSizeHalf) / chunkSize), FMath::Floor((mousePosZ + chunkSizeHalf) / chunkSize));
 	FIntPoint chunkCoord = FIntPoint(FMath::Floor((mousePosX) / chunkSize), FMath::Floor((mousePosZ) / chunkSize));
 
+	if (mousePosX < 0)
+	{
+		chunkCoord.X--;
+	}
+	if (mousePosZ < 0)
+	{
+		chunkCoord.Y--;
+	}
 	//int32 coordX;
 	//int32 coordZ;
 
@@ -555,6 +605,43 @@ void AZDPlayerCharacterBase::CalculateChunkModification(FPlacementData placement
 		Server_RequestRegionUpdate(chunksToUpdate);
 	}
 
+}
+
+FIntPoint AZDPlayerCharacterBase::CalculateChunkCoordPlayerAt()
+{
+	if (WorldHandlerRef->ChunkSize > 0)
+	{
+		FIntPoint toReturn = FIntPoint(FMath::Floor((GetActorLocation().X - ChunkSizeHalf_player) / ChunkSize_player) + 1, FMath::Floor((GetActorLocation().Z + ChunkSizeHalf_player) / ChunkSize_player));
+		return toReturn;
+	}
+	return FIntPoint(0, 0);
+}
+
+uint8 AZDPlayerCharacterBase::ShouldRequestChunkLoad()
+{
+	if (CalculateChunkCoordPlayerAt() != CenterChunkCoords)
+	{
+		CenterChunkCoords = CalculateChunkCoordPlayerAt();
+		return true;
+	}
+	return false;
+}
+
+void AZDPlayerCharacterBase::RequestChunkLoad(uint8 playerID, FIntPoint newChenterChunk)
+{
+	if (HasAuthority())
+	{
+		WorldHandlerRef->LoadChunks(playerID, newChenterChunk);
+	}
+	else
+	{
+		Server_RequestChunkLoad(playerID, newChenterChunk);
+	}
+}
+
+void AZDPlayerCharacterBase::Server_RequestChunkLoad_Implementation(uint8 playerID, FIntPoint newChenterChunk)
+{
+	WorldHandlerRef->LoadChunks(playerID, newChenterChunk);
 }
 
 void AZDPlayerCharacterBase::Server_RequestRegionUpdate_Implementation(const TArray<FChunkChangeData>& ChunkChangeData)

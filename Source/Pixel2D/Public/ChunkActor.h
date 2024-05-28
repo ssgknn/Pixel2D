@@ -23,6 +23,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tilesets")
 	class UPaperTileSet* TileSet0;
 
+	
+
 #pragma endregion Tilesets
 
 #pragma region ProceduralMeshData
@@ -36,12 +38,12 @@ public:
 
 #pragma endregion ProceduralMeshData
 
-	UPROPERTY(/*ReplicatedUsing = OnRep_ChunkDataChanged*/)
+	UPROPERTY(ReplicatedUsing = OnRep_ChunkDataChanged)
 	FChunkData ChunkData;
 
 private:
-	UPROPERTY()
-	class AWorldHandler* WorldHandlerRef;
+	/*UPROPERTY()
+	class AWorldHandler* WorldHandlerRef;*/
 
 	UPROPERTY()
 	USceneComponent* AttachComponent;
@@ -61,7 +63,7 @@ public:
 	AChunkActor(const FObjectInitializer& ObjectInitializer);
 
 	virtual void Tick(float DeltaTime) override;
-	//virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -74,11 +76,20 @@ public:
 	UFUNCTION()
 	void RefreshChunk();
 
+	UFUNCTION(Server, Reliable)
+	void Server_RefreshChunk();
+
 	UFUNCTION()
 	void RefreshCollision(int32 blockSize, int32 chunkElementCount);
 
 	UFUNCTION()
 	void RefreshCollisionV2(int32 blockSize, int32 chunkElementCount);
+
+	UFUNCTION()
+	void RefreshCollisionV3(int32 blockSize, int32 chunkElementCount);
+
+	UFUNCTION()
+	void RefreshCollisionV4(int32 blockSize, int32 chunkElementCount);
 	
 	//UFUNCTION()
 	//void ModifyBlock(FVector HitLocation, int32 DesiredBlockID);

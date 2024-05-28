@@ -44,29 +44,15 @@ public:
 	UPROPERTY()
 	int32 ChunksCount;
 
-	UPROPERTY()
-	FIntPoint CenterChunkCoords;
+	TArray<TPair<uint8, TArray<FIntPoint>>> ChunkCoordinatesShouldBeActiveByPlayers;
 
+	// array of loaded chunks
 	UPROPERTY()
-	FIntPoint ChunkCoordsPlayerAt;
-
-	UPROPERTY()
-	TArray<FIntPoint> ActiveChunkCoordinates;
-
-	UPROPERTY()
-	TArray<FIntPoint> ChunkCoordinatesShouldBeActive;
+	TMap<FIntPoint, AChunkActor*> ChunkActors;
 
 	// chunk Actor class ref
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ChunkProperty")
 	TSubclassOf<AChunkActor> ChunkActorTemplate;
-
-	// array of loaded chunks
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VoxelComponent")
-	TArray<AChunkActor*> ChunksArray;
-
-	// Fvector to compare player position to check if chunk loading needed
-	/*UPROPERTY()
-	FVector ChunkCenterPosition;*/
 	
 	UPROPERTY()
 	class UWorldGenerator* WorldGen;
@@ -74,14 +60,11 @@ public:
 	UPROPERTY()
 	class UFileHandler* FileHandler;
 
-	// PlayerActor
+	// PlayerActors IDs
 	UPROPERTY()
-	class AZDPlayerCharacterBase* PlayerActorRef;
+	TMap<class AZDPlayerCharacterBase*, uint8> PlayerIDs;
 
-	UPROPERTY()
-	FVector PlayerPosition;
-
-	uint8 bFirstLaunch;
+	uint8 currentPlayerID = 0;
 
 #pragma endregion DataVariables
 
@@ -99,11 +82,17 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UFUNCTION()
-	void AddChunks();
+	UFUNCTION(Server, Reliable)
+	void Server_RegisterPlayerID(class AZDPlayerCharacterBase* playerToRegister);
 
-	//UFUNCTION(Server, Reliable)
-	//void Server_AddChunks();
+	/*UFUNCTION(Server, Reliable)
+	void Server_AddPlayerChunkCoordinates(FIntPoint newChenterChunkCoord);*/
+
+	UFUNCTION()
+	void LoadChunks(uint8 playerID, FIntPoint newChenterChunk);
+
+	UFUNCTION(Server, Reliable)
+	void Server_LoadChunks(uint8 playerID, FIntPoint newChenterChunkCoord);
 
 	UFUNCTION()
 	uint8 IsChunkExists(const int32 X, const int32 Y);
@@ -135,14 +124,6 @@ private:
 
 	void InitializeData();
 
-	void UpdatePlayerPosition();
-
-	void RemoveChunks();
-
 	/*UFUNCTION(Server, Reliable)
 	void Server_RemoveChunks();*/
-
-	void RefreshChunks();
-
-	FIntPoint GetChunkCoordPlayerAt();
 };

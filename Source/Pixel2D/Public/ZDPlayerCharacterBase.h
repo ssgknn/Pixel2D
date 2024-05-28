@@ -44,6 +44,10 @@ protected:
 
 public:
 
+	UFUNCTION(BlueprintCallable)
+	void DEBUG_Key();
+
+
 	// Items
 	UFUNCTION(BlueprintCallable, Category = "Items")
 	void UseItem(class UItem* Item);
@@ -219,24 +223,43 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterRotation)
 	uint8 CharacterRotation;
 
+	//void PrintMousePositionToWorld();
 	
-//Chunk
+// ** Chunk **
 public:
-
-	UFUNCTION()
-	void CalculateChunkModification(FPlacementData placementData);
-
 
 	UFUNCTION(Server, Reliable)
 	void Server_RequestRegionUpdate(const TArray<FChunkChangeData>& chunksToUpdate);
 
-	//UFUNCTION(Server, reliable)
-	//void Server_ModifyChunks(FPlacementData placementData);
+	UFUNCTION()
+	void RequestChunkLoad(uint8 playerID, FIntPoint newChenterChunk);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RequestChunkLoad(uint8 playerID, FIntPoint newChenterChunk);
 
 	UPROPERTY()
 	class AWorldHandler* WorldHandlerRef;
 
-	//void PrintMousePositionToWorld();
+	uint8 PlayerID;
+
+	void SetPlayerID(uint8 ID);
+	
+private:
+	
+	void InitializeChunkVariables();
+
+	UFUNCTION()
+	void CalculateChunkModification(FPlacementData placementData);
+
+	FIntPoint CalculateChunkCoordPlayerAt();
+
+	uint8 ShouldRequestChunkLoad();
+
+	UPROPERTY()
+	FIntPoint CenterChunkCoords;
+
+	int32 ChunkSize_player;
+	int32 ChunkSizeHalf_player;
 
 #pragma region Input
 private:

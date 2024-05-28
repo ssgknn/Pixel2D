@@ -30,9 +30,18 @@ struct PIXEL2D_API FChunkData
 {
 	GENERATED_USTRUCT_BODY()
 
+	UPROPERTY()
 	FIntPoint ChunkCoordinate;
+
+	UPROPERTY()
 	TArray<int32> BlockTextureID;
+
+	UPROPERTY()
 	TArray<uint8> bHasCollision;
+
+	UPROPERTY()
+	class AWorldHandler* WorldHandlerRef;
+
 	TArray<FPickupData> Pickups;
 };
 
@@ -84,8 +93,13 @@ struct PIXEL2D_API FPickupData
 {
 	GENERATED_USTRUCT_BODY()
 
+	UPROPERTY()
 	TSubclassOf<class APickup> PickupType;
+
+	UPROPERTY()
 	UItem* Item;
+
+	UPROPERTY()
 	FVector Location;
 
 };

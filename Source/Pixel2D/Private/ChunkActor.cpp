@@ -9,6 +9,7 @@
 #include "Components/BoxComponent.h"
 #include "ProceduralMeshComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "PaperTileLayer.h"
 
 #include "WorldHandler.h"
 #include "../../../../../Program Files/Epic Games/UE_5.1/Engine/Plugins/Runtime/ProceduralMeshComponent/Source/ProceduralMeshComponent/Public/ProceduralMeshComponent.h"
@@ -18,10 +19,13 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
-	SetRootComponent(RootComponent);
-	//SetReplicates(true);
+	bReplicates = true;
+
+	//NetCullDistanceSquared = 1000;
 
 	AttachComponent = CreateDefaultSubobject<USceneComponent>(TEXT("AttachComponent"));
+
+	SetRootComponent(AttachComponent);
 
 	TileMapComponent = CreateDefaultSubobject<UPaperTileMapComponent>(TEXT("TileMap"));
 	TileMapComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -46,26 +50,25 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	// Initialize TileSets
 	static ConstructorHelpers::FObjectFinder<UPaperTileSet> TileSetObject(TEXT("/Game/2DAssets/PrototypeItch/Assets/TS_Placeholder0"));
 	TileSet0 = TileSetObject.Object;
+
 }
 
 void AChunkActor::BeginPlay()
 {
 	Super::BeginPlay();
-	//LoadChunk();
 }
 
 void AChunkActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-//void AChunkActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-//{
-//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-//
-//	DOREPLIFETIME(AChunkActor, ChunkData);
-//}
+void AChunkActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AChunkActor, ChunkData);
+}
 
 void AChunkActor::LoadChunk()
 {
@@ -74,9 +77,9 @@ void AChunkActor::LoadChunk()
 	TextComponent->AddRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 	TextComponent->AddRelativeLocation(FVector(0.0f, 1.0f, 0.0f));
 
-	int32 blockSize = WorldHandlerRef->BlockSize;
-	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
-	
+	int32 blockSize = ChunkData.WorldHandlerRef->BlockSize;
+	int32 chunkElementCount = ChunkData.WorldHandlerRef->ChunkElementCount;
+
 	TileMapComponent->CreateNewTileMap(chunkElementCount, chunkElementCount, blockSize, blockSize, 1.0, true);
 	TileMapComponent->SetRelativeLocation(FVector(blockSize / 2.0f, 0.0f, -blockSize / 2.0f));
 
@@ -91,20 +94,23 @@ void AChunkActor::LoadChunk()
 			
 			TileMapComponent->SetTile(x, z, 0, LocalTileInfo);
 			// if (FMath::RandRange(0, 100) < 99)
-			
+
 		}
 	}
 
-	CollisionBoxComponent->SetBoxExtent(FVector(WorldHandlerRef->ChunkSize * 0.5f, 20.0f, WorldHandlerRef->ChunkSize * 0.5f));
-	CollisionBoxComponent->SetRelativeLocation(FVector(WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(WorldHandlerRef->ChunkSize) * 0.5f));
+	CollisionBoxComponent->SetBoxExtent(FVector(ChunkData.WorldHandlerRef->ChunkSize * 0.5f, 20.0f, ChunkData.WorldHandlerRef->ChunkSize * 0.5f));
+	CollisionBoxComponent->SetRelativeLocation(FVector(ChunkData.WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(ChunkData.WorldHandlerRef->ChunkSize) * 0.5f));
+
+	RefreshCollisionV4(blockSize, chunkElementCount);
 	
-	RefreshCollisionV2(blockSize, chunkElementCount);
 }
 
 void AChunkActor::RefreshChunk()
 {
-	int32 blockSize = WorldHandlerRef->BlockSize;
-	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
+	int32 blockSize = ChunkData.WorldHandlerRef->BlockSize;
+	int32 chunkElementCount = ChunkData.WorldHandlerRef->ChunkElementCount;
+
+	TileMapComponent->CreateNewTileMap(chunkElementCount, chunkElementCount, blockSize, blockSize, 1.0, true);
 
 	FPaperTileInfo LocalTileInfo;
 	LocalTileInfo.TileSet = TileSet0;
@@ -121,7 +127,12 @@ void AChunkActor::RefreshChunk()
 		}
 	}
 
-	RefreshCollisionV2(blockSize, chunkElementCount);
+	RefreshCollisionV4(blockSize, chunkElementCount);
+}
+
+void AChunkActor::Server_RefreshChunk_Implementation()
+{
+	RefreshChunk();
 }
 
 void AChunkActor::RefreshCollision(int32 blockSize, int32 chunkElementCount)
@@ -310,6 +321,188 @@ void AChunkActor::RefreshCollisionV2(int32 blockSize, int32 chunkElementCount)
 	ProceduralTerrainCollisionMesh->CreateMeshSection(0, VerticesTerrain, TrianglesTerrain, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), true);
 }
 
+void AChunkActor::RefreshCollisionV3(int32 blockSize, int32 chunkElementCount)
+{
+	VerticesTerrain.Empty();
+	TrianglesTerrain.Empty();
+
+	//ProceduralTerrainCollisionMesh->ClearAllMeshSections();
+
+	int32 i = 0;
+
+	TArray<bool> visited;
+	visited.SetNumZeroed(chunkElementCount * chunkElementCount);
+
+	for (int32 x = 0; x < chunkElementCount; x++)
+	{
+		for (int32 z = 0; z < chunkElementCount; z++)
+		{
+			if (ChunkData.bHasCollision[x + chunkElementCount * z] == 1 && !visited[x + chunkElementCount * z])
+			{
+				int32 width = 1;
+				int32 height = 1;
+
+				// Find the width of the rectangle
+				while (x + width < chunkElementCount && ChunkData.bHasCollision[(x + width) + chunkElementCount * z] == 1 && !visited[(x + width) + chunkElementCount * z])
+				{
+					width++;
+				}
+
+				// Find the height of the rectangle
+				bool expandHeight = true;
+				while (expandHeight && z + height < chunkElementCount)
+				{
+					for (int32 k = 0; k < width; k++)
+					{
+						if (ChunkData.bHasCollision[(x + k) + chunkElementCount * (z + height)] == 0 || visited[(x + k) + chunkElementCount * (z + height)])
+						{
+							expandHeight = false;
+							break;
+						}
+					}
+					if (expandHeight)
+					{
+						height++;
+					}
+				}
+
+				// Mark visited cells
+				for (int32 dx = 0; dx < width; dx++)
+				{
+					for (int32 dz = 0; dz < height; dz++)
+					{
+						visited[(x + dx) + chunkElementCount * (z + dz)] = true;
+					}
+				}
+
+				// Add vertices to the desired block corners
+				VerticesTerrain.Add(FVector(blockSize * x, -50, -blockSize * z));
+				VerticesTerrain.Add(FVector(blockSize * (x + width), -50, -blockSize * z));
+				VerticesTerrain.Add(FVector(blockSize * (x + width), -50, -blockSize * (z + height)));
+				VerticesTerrain.Add(FVector(blockSize * x, -50, -blockSize * (z + height)));
+				VerticesTerrain.Add(FVector(blockSize * x, +100, -blockSize * z));
+				VerticesTerrain.Add(FVector(blockSize * (x + width), +100, -blockSize * z));
+				VerticesTerrain.Add(FVector(blockSize * (x + width), +100, -blockSize * (z + height)));
+				VerticesTerrain.Add(FVector(blockSize * x, +100, -blockSize * (z + height)));
+
+				// Make collision triangles from points
+				TrianglesTerrain.Add(i + 0);
+				TrianglesTerrain.Add(i + 4);
+				TrianglesTerrain.Add(i + 5);
+				TrianglesTerrain.Add(i + 5);
+				TrianglesTerrain.Add(i + 1);
+				TrianglesTerrain.Add(i + 0);
+				TrianglesTerrain.Add(i + 1);
+				TrianglesTerrain.Add(i + 5);
+				TrianglesTerrain.Add(i + 2);
+				TrianglesTerrain.Add(i + 2);
+				TrianglesTerrain.Add(i + 5);
+				TrianglesTerrain.Add(i + 6);
+				TrianglesTerrain.Add(i + 3);
+				TrianglesTerrain.Add(i + 2);
+				TrianglesTerrain.Add(i + 7);
+				TrianglesTerrain.Add(i + 7);
+				TrianglesTerrain.Add(i + 2);
+				TrianglesTerrain.Add(i + 6);
+				TrianglesTerrain.Add(i + 0);
+				TrianglesTerrain.Add(i + 3);
+				TrianglesTerrain.Add(i + 4);
+				TrianglesTerrain.Add(i + 4);
+				TrianglesTerrain.Add(i + 3);
+				TrianglesTerrain.Add(i + 7);
+
+				i += 8;
+			}
+		}
+	}
+
+	ProceduralTerrainCollisionMesh->ClearMeshSection(0);
+
+	ProceduralTerrainCollisionMesh->CreateMeshSection(0, VerticesTerrain, TrianglesTerrain, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), true);
+}
+
+void AChunkActor::RefreshCollisionV4(int32 blockSize, int32 chunkElementCount)
+{
+	VerticesTerrain.Reset();
+	TrianglesTerrain.Reset();
+
+	TArray<bool> visited;
+	visited.Init(false, chunkElementCount * chunkElementCount);
+
+	int32 i = 0; // Declare i here
+
+	for (int32 z = 0; z < chunkElementCount; ++z)
+	{
+		for (int32 x = 0; x < chunkElementCount; ++x)
+		{
+			int32 index = x + chunkElementCount * z;
+			if (ChunkData.bHasCollision[index] == 1 && !visited[index])
+			{
+				int32 width = 0;
+				int32 height = 0;
+
+				// Determine the width of the rectangle
+				while ((x + width) < chunkElementCount && ChunkData.bHasCollision[index + width] == 1 && !visited[index + width])
+				{
+					++width;
+				}
+
+				// Determine the height of the rectangle
+				bool expandHeight = true;
+				while (expandHeight && (z + height) < chunkElementCount)
+				{
+					for (int32 w = 0; w < width; ++w)
+					{
+						if (ChunkData.bHasCollision[index + w + chunkElementCount * height] == 0 || visited[index + w + chunkElementCount * height])
+						{
+							expandHeight = false;
+							break;
+						}
+					}
+					if (expandHeight)
+					{
+						++height;
+					}
+				}
+
+				// Mark the cells within the rectangle as visited
+				for (int32 dz = 0; dz < height; ++dz)
+				{
+					for (int32 dx = 0; dx < width; ++dx)
+					{
+						visited[index + dx + chunkElementCount * dz] = true;
+					}
+				}
+
+				// Add vertices for the block corners
+				FVector v0(blockSize * x, -50, -blockSize * z);
+				FVector v1(blockSize * (x + width), -50, -blockSize * z);
+				FVector v2(blockSize * (x + width), -50, -blockSize * (z + height));
+				FVector v3(blockSize * x, -50, -blockSize * (z + height));
+				FVector v4(blockSize * x, +100, -blockSize * z);
+				FVector v5(blockSize * (x + width), +100, -blockSize * z);
+				FVector v6(blockSize * (x + width), +100, -blockSize * (z + height));
+				FVector v7(blockSize * x, +100, -blockSize * (z + height));
+
+				VerticesTerrain.Append({ v0, v1, v2, v3, v4, v5, v6, v7 });
+
+				// Add collision triangles
+				TrianglesTerrain.Append({
+					i + 0, i + 4, i + 5, i + 5, i + 1, i + 0,
+					i + 1, i + 5, i + 2, i + 2, i + 5, i + 6,
+					i + 3, i + 2, i + 7, i + 7, i + 2, i + 6,
+					i + 0, i + 3, i + 4, i + 4, i + 3, i + 7
+					});
+
+				i += 8;
+			}
+		}
+	}
+
+	ProceduralTerrainCollisionMesh->ClearMeshSection(0);
+	ProceduralTerrainCollisionMesh->CreateMeshSection(0, VerticesTerrain, TrianglesTerrain, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), true);
+}
+
 //void AChunkActor::ModifyBlock(FVector HitLocation, FPlacementData changeData)
 //{
 //	if (HasAuthority())
@@ -403,6 +596,7 @@ void AChunkActor::RefreshCollisionV2(int32 blockSize, int32 chunkElementCount)
 
 void AChunkActor::OnRep_ChunkDataChanged()
 {
+	RefreshChunk();
 }
 
 void AChunkActor::SetFChunkData(FChunkData data)

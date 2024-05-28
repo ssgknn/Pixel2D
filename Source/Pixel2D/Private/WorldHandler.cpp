@@ -45,8 +45,6 @@ void AWorldHandler::BeginPlay()
 void AWorldHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	UpdatePlayerPosition();
-	RefreshChunks();
 }
 
 void AWorldHandler::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -56,21 +54,31 @@ void AWorldHandler::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AWorldHandler, ChunkDataChange);
 }
 
+void AWorldHandler::Server_RegisterPlayerID_Implementation(AZDPlayerCharacterBase* playerToRegister)
+{
+	if (PlayerIDs.Contains(playerToRegister))
+	{
+		return;
+	}
+	else
+	{
+		PlayerIDs.Add(playerToRegister, currentPlayerID);
+		playerToRegister->SetPlayerID(currentPlayerID);
+		currentPlayerID++;
+	}
+}
+
 void AWorldHandler::InitializeData()
 {
 	//Manually set data... later on from file
 	RenderRange = 1;
 	ChunkElementCount = 32;
 	BlockSize = 16;
-	CenterChunkCoords = FIntPoint(0, 0);
-	bFirstLaunch = 1;
-
 
 	//Calculated data to initialize
 	ChunkSize = ChunkElementCount * BlockSize;
 	ChunkSizeHalf = ChunkSize / 2;
 	ChunksCount = (RenderRange * 2 + 1) ^ 2;
-	ChunkCoordinatesShouldBeActive.SetNum(ChunksCount);
 
 
 	//Called data  to initialize
@@ -78,116 +86,140 @@ void AWorldHandler::InitializeData()
 	WorldGen = NewObject<UWorldGenerator>(this, UWorldGenerator::StaticClass());
 	FileHandler = NewObject<UFileHandler>(this, UFileHandler::StaticClass());
 
-	//PlayerActorRef Set
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		UGameInstance* GameInstance = World->GetGameInstance();
-		if (GameInstance)
-		{
-			ULocalPlayer* LocalPlayer = GameInstance->GetFirstGamePlayer();
-			if (LocalPlayer)
-			{
-				APlayerController* LocalPlayerController = LocalPlayer->GetPlayerController(World);
-				if (LocalPlayerController)
-				{
-					PlayerActorRef = Cast<AZDPlayerCharacterBase>(LocalPlayerController->GetPawn());
-				}
-			}
-		}
-	}
+	////PlayerActorRef Set
+	//UWorld* World = GetWorld();
+	//if (World)
+	//{
+	//	UGameInstance* GameInstance = World->GetGameInstance();
+	//	if (GameInstance)
+	//	{
+	//		ULocalPlayer* LocalPlayer = GameInstance->GetFirstGamePlayer();
+	//		if (LocalPlayer)
+	//		{
+	//			APlayerController* LocalPlayerController = LocalPlayer->GetPlayerController(World);
+	//			if (LocalPlayerController)
+	//			{
+	//				PlayerActorRef = Cast<AZDPlayerCharacterBase>(LocalPlayerController->GetPawn());
+	//			}
+	//		}
+	//	}
+	//}
+	//}
 
 	//PlayerActorRef = Cast<AZDPlayerCharacterBase>(LocalPlayerController->GetPawn());
 	//Cast<AZDPlayerCharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 }
 
-void AWorldHandler::AddChunks()
+void AWorldHandler::LoadChunks(uint8 playerID, FIntPoint newChenterChunk)
 {
-	ChunkCoordinatesShouldBeActive.Empty();
-
 	if (ChunkActorTemplate == nullptr)
 	{
 		return;
 	}
-	for (int32 IndexX = -RenderRange; IndexX <= RenderRange; IndexX++)
+
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		for (int32 IndexZ = -RenderRange; IndexZ <= RenderRange; IndexZ++)
+		uint8 playerIndex = NULL;
+		// find the player ID indey in the array
+		for (uint8 i = 0; i < ChunkCoordinatesShouldBeActiveByPlayers.Num(); ++i)
 		{
-			int32 ChunkCoordX = IndexX + CenterChunkCoords.X;
-			int32 ChunkCoordZ = IndexZ + CenterChunkCoords.Y;
-
-			ChunkCoordinatesShouldBeActive.Add(FIntPoint(ChunkCoordX, ChunkCoordZ));
-
-			// chunk already exists
-			if (!IsChunkExists(ChunkCoordX, ChunkCoordZ))
+			if (ChunkCoordinatesShouldBeActiveByPlayers[i].Key == playerID)
 			{
-				ActiveChunkCoordinates.Add(FIntPoint(ChunkCoordX, ChunkCoordZ));
-
-				//GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Green, FString::Printf(TEXT("NewX: %i NewZ: %i"), ChunkCoordX, ChunkCoordZ));
-
-				float ChunkSpawnPositionX = (ChunkCoordX * ChunkSize) - ChunkSizeHalf;
-				float ChunkSpawnPositionZ = (ChunkCoordZ * ChunkSize) + ChunkSizeHalf;
-
-
-				FTransform SpawnTransform = FTransform(FVector(ChunkSpawnPositionX, 0.0f, ChunkSpawnPositionZ));
-
-				AChunkActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AChunkActor>(ChunkActorTemplate, SpawnTransform);
-
-				FChunkData* FoundChunkData = RegionData.FindByPredicate([&](const FChunkData& ChunkData)
-					{ return ChunkData.ChunkCoordinate == FIntPoint(ChunkCoordX, ChunkCoordZ); });
-
-				SpawnedActor->WorldHandlerRef = this;
-				SpawnedActor->SetFChunkData(*FoundChunkData);
-				SpawnedActor->LoadChunk();
-
-				if (FoundChunkData->Pickups.Num())
-				{
-					for (int32 i = 0; i < FoundChunkData->Pickups.Num(); i++)
-					{
-						SpawnPickup(FoundChunkData->Pickups[i]);
-					}
-				}
-
-				FString FormattedText = FString::Printf(TEXT("(X%i, Y%i)"), ChunkCoordX, ChunkCoordZ);
-				//SpawnedActor->TextComponent->SetText(FText::FromString(FormattedText));
-				ChunksArray.Add(SpawnedActor);
+				playerIndex = i;
+				break;
 			}
 		}
-	}	
-}
 
-//void AWorldHandler::Server_AddChunks_Implementation()
-//{
-//	AddChunks();
-//}
-
-
-void AWorldHandler::RemoveChunks()
-{
-	
-	for (int32 Index = 0; Index < ActiveChunkCoordinates.Num(); Index++)
-	{
-		if (ChunkCoordinatesShouldBeActive.Find(ActiveChunkCoordinates[Index]) == INDEX_NONE)
+		if (playerIndex == NULL)
 		{
-			ActiveChunkCoordinates.RemoveAt(Index, 1, false);
-			ChunksArray[Index]->Destroy();
-			ChunksArray.RemoveAt(Index, 1, false);
+			TArray<FIntPoint> NewPlayerValues;
+			TPair<uint8, TArray<FIntPoint>> newEmpty(playerID, NewPlayerValues);
+			ChunkCoordinatesShouldBeActiveByPlayers.Add(newEmpty);
+		}
+
+		for (int32 IndexX = -RenderRange; IndexX <= RenderRange; IndexX++)
+		{
+			for (int32 IndexZ = -RenderRange; IndexZ <= RenderRange; IndexZ++)
+			{
+				int32 ChunkCoordX = IndexX + newChenterChunk.X;
+				int32 ChunkCoordZ = IndexZ + newChenterChunk.Y;
+
+				ChunkCoordinatesShouldBeActiveByPlayers[playerIndex].Value.Add(FIntPoint(ChunkCoordX, ChunkCoordZ));
+
+				// chunk already exists
+				if (!IsChunkExists(ChunkCoordX, ChunkCoordZ))
+				{
+
+					float ChunkSpawnPositionX = (ChunkCoordX * ChunkSize) - ChunkSizeHalf;
+					float ChunkSpawnPositionZ = (ChunkCoordZ * ChunkSize) + ChunkSizeHalf;
+
+
+					FTransform SpawnTransform = FTransform(FVector(ChunkSpawnPositionX, 0.0f, ChunkSpawnPositionZ));
+
+					AChunkActor* SpawnedActor = GetWorld()->SpawnActorDeferred<AChunkActor>(ChunkActorTemplate, SpawnTransform);
+					if (SpawnedActor)
+					{
+						FChunkData* FoundChunkData = RegionData.FindByPredicate([&](const FChunkData& ChunkData)
+							{ return ChunkData.ChunkCoordinate == FIntPoint(ChunkCoordX, ChunkCoordZ); });
+
+						FoundChunkData->WorldHandlerRef = this;
+
+						//SpawnedActor->WorldHandlerRef = this;
+						SpawnedActor->SetFChunkData(*FoundChunkData);
+						SpawnedActor->LoadChunk();
+
+						if (FoundChunkData->Pickups.Num())
+						{
+							for (int32 i = 0; i < FoundChunkData->Pickups.Num(); i++)
+							{
+								SpawnPickup(FoundChunkData->Pickups[i]);
+							}
+						}
+
+						// Finish spawning
+						UGameplayStatics::FinishSpawningActor(SpawnedActor, SpawnTransform);
+						
+						
+
+						ChunkActors.Add(FIntPoint(ChunkCoordX, ChunkCoordZ), SpawnedActor);
+					}
+				}
+			}
+		}
+
+		TArray<FIntPoint> AllActiveChunkValues;
+
+		// Iterate through the array
+		for (const TPair<uint8, TArray<FIntPoint>>& Pair : ChunkCoordinatesShouldBeActiveByPlayers)
+		{
+			AllActiveChunkValues.Append(Pair.Value);
+		}
+
+		for (auto It = ChunkActors.CreateIterator(); It; ++It)
+		{
+			if (!AllActiveChunkValues.Contains(It.Key()))
+			{
+				AChunkActor* ChunkActor = It.Value();
+				if (ChunkActor)
+				{
+					ChunkActor->Destroy();
+				}
+
+				It.RemoveCurrent();
+			}
 		}
 	}
-
-	ActiveChunkCoordinates.Shrink();
-	ChunksArray.Shrink();
-	
-	/*else
+	else
 	{
-		Server_RemoveChunks();
-	}*/
+		Server_LoadChunks(playerID, newChenterChunk);
+	}
 }
 
-//void AWorldHandler::Server_RemoveChunks_Implementation()
-//{
-//
-//}
+void AWorldHandler::Server_LoadChunks_Implementation(uint8 playerID, FIntPoint newChenterChunk)
+{
+	LoadChunks(playerID, newChenterChunk);
+}
+
 
 void AWorldHandler::SpawnPickup(FPickupData PickupData)
 {
@@ -218,39 +250,12 @@ void AWorldHandler::SpawnPickup(FPickupData PickupData)
 
 uint8 AWorldHandler::IsChunkExists(const int32 X, const int32 Y)
 {
-	if ( ActiveChunkCoordinates.Find(FIntPoint(X, Y)) == INDEX_NONE )
+	if (ChunkActors.Contains(FIntPoint(X, Y)))
 	{
-		return 0;
+		return 1;
 	}
 
-	return 1;
-}
-
-void AWorldHandler::UpdatePlayerPosition()
-{
-	if ( PlayerActorRef )
-	{
-		PlayerPosition = PlayerActorRef->GetActorLocation();
-	}
-}
-
-void AWorldHandler::RefreshChunks()
-{
-	//const FVector PlayerDistanceFromChunkCenter = ChunkCenterPosition - PlayerPosition;
-	//if (FMath::Abs(PlayerDistanceFromChunkCenter.X) > ChunkSize || FMath::Abs(PlayerDistanceFromChunkCenter.Z) > ChunkSize)
-	if ( PlayerActorRef && GetChunkCoordPlayerAt() != CenterChunkCoords )
-	{
-		CenterChunkCoords = GetChunkCoordPlayerAt();
-		AddChunks();
-		RemoveChunks();
-		return;
-	}
-	if ( bFirstLaunch )
-	{
-		bFirstLaunch = 0;
-		AddChunks();
-		return;
-	}
+	return 0;
 }
 
 void AWorldHandler::UpdateRegionData(TArray<FChunkChangeData> chunksToUpdate)
@@ -274,19 +279,13 @@ void AWorldHandler::UpdateRegionData(TArray<FChunkChangeData> chunksToUpdate)
 				if (IsChunkExists(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y))
 				{
 					FIntPoint coords = FIntPoint(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y);
-					ChunksArray[FindActiveChunkIndexByCoordinate(coords)]->SetFChunkData(ChunkToUpdate);
-					ChunksArray[FindActiveChunkIndexByCoordinate(coords)]->RefreshChunk();
+					ChunkActors[coords]->SetFChunkData(ChunkToUpdate);
+					ChunkActors[coords]->RefreshChunk();
 				}
 			}
 		}
 	}
 }
-
-//void AWorldHandler::Server_UpdateRegionData_Implementation(const TArray<FChunkChangeData>& chunksToUpdate)
-//{
-//	UE_LOG(LogTemp, Warning, TEXT("Server_UpdateRegionData_Implementation called"));
-//	UpdateRegionData(chunksToUpdate);
-//}
 
 void AWorldHandler::OnRep_RegionDataChanged()
 {
@@ -307,8 +306,8 @@ void AWorldHandler::OnRep_RegionDataChanged()
 				if (IsChunkExists(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y))
 				{
 					FIntPoint coords = FIntPoint(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y);
-					ChunksArray[FindActiveChunkIndexByCoordinate(coords)]->SetFChunkData(ChunkToUpdate);
-					ChunksArray[FindActiveChunkIndexByCoordinate(coords)]->RefreshChunk();
+					ChunkActors[FindActiveChunkIndexByCoordinate(coords)]->SetFChunkData(ChunkToUpdate);
+					ChunkActors[FindActiveChunkIndexByCoordinate(coords)]->RefreshChunk();
 				}
 			}
 
@@ -347,7 +346,7 @@ int32 AWorldHandler::FindActiveChunkIndexByCoordinate(const FIntPoint& TargetCoo
 {
 	for (int32 Index = 0; Index < RegionData.Num(); ++Index)
 	{
-		if (ChunksArray[Index]->ChunkData.ChunkCoordinate == TargetCoordinate)
+		if (ChunkActors[Index]->ChunkData.ChunkCoordinate == TargetCoordinate)
 		{
 			return Index;
 		}
@@ -355,15 +354,6 @@ int32 AWorldHandler::FindActiveChunkIndexByCoordinate(const FIntPoint& TargetCoo
 	return INDEX_NONE; // Return an invalid index if not found
 }
 
-FIntPoint AWorldHandler::GetChunkCoordPlayerAt()
-{
-	if ( PlayerActorRef && ChunkSize > 0 )
-	{
-		FIntPoint toReturn = FIntPoint(FMath::Floor((PlayerActorRef->GetActorLocation().X - ChunkSizeHalf) / ChunkSize) + 1, FMath::Floor((PlayerActorRef->GetActorLocation().Z + ChunkSizeHalf) / ChunkSize));
-		return toReturn;
-	}
-	return FIntPoint(0, 0);
-}
 
 void AWorldHandler::GetFChunkDataByChunkCoordinate(FChunkData& desiredChunkData, const FIntPoint& TargetChunkCoordinate)
 {
