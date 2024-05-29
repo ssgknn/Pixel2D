@@ -71,8 +71,8 @@ void AWorldHandler::Server_RegisterPlayerID_Implementation(AZDPlayerCharacterBas
 void AWorldHandler::InitializeData()
 {
 	//Manually set data... later on from file
-	RenderRange = 1;
-	ChunkElementCount = 32;
+	RenderRange = 3;
+	ChunkElementCount = 16;
 	BlockSize = 16;
 
 	//Calculated data to initialize
@@ -119,9 +119,9 @@ void AWorldHandler::LoadChunks(uint8 playerID, FIntPoint newChenterChunk)
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		uint8 playerIndex = NULL;
+		int32 playerIndex = -1;
 		// find the player ID indey in the array
-		for (uint8 i = 0; i < ChunkCoordinatesShouldBeActiveByPlayers.Num(); ++i)
+		for (int32 i = 0; i < ChunkCoordinatesShouldBeActiveByPlayers.Num(); ++i)
 		{
 			if (ChunkCoordinatesShouldBeActiveByPlayers[i].Key == playerID)
 			{
@@ -130,11 +130,17 @@ void AWorldHandler::LoadChunks(uint8 playerID, FIntPoint newChenterChunk)
 			}
 		}
 
-		if (playerIndex == NULL)
+		if (playerIndex < 0)
 		{
+			playerIndex = ChunkCoordinatesShouldBeActiveByPlayers.Num();
 			TArray<FIntPoint> NewPlayerValues;
 			TPair<uint8, TArray<FIntPoint>> newEmpty(playerID, NewPlayerValues);
 			ChunkCoordinatesShouldBeActiveByPlayers.Add(newEmpty);
+		}
+		else
+		{
+			// Clear the existing array but keep the pair
+			ChunkCoordinatesShouldBeActiveByPlayers[playerIndex].Value.Empty();
 		}
 
 		for (int32 IndexX = -RenderRange; IndexX <= RenderRange; IndexX++)
@@ -192,6 +198,7 @@ void AWorldHandler::LoadChunks(uint8 playerID, FIntPoint newChenterChunk)
 		// Iterate through the array
 		for (const TPair<uint8, TArray<FIntPoint>>& Pair : ChunkCoordinatesShouldBeActiveByPlayers)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Appending %d elements"), Pair.Value.Num());
 			AllActiveChunkValues.Append(Pair.Value);
 		}
 

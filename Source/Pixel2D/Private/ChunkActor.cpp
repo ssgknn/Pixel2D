@@ -101,7 +101,7 @@ void AChunkActor::LoadChunk()
 	CollisionBoxComponent->SetBoxExtent(FVector(ChunkData.WorldHandlerRef->ChunkSize * 0.5f, 20.0f, ChunkData.WorldHandlerRef->ChunkSize * 0.5f));
 	CollisionBoxComponent->SetRelativeLocation(FVector(ChunkData.WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(ChunkData.WorldHandlerRef->ChunkSize) * 0.5f));
 
-	RefreshCollisionV4(blockSize, chunkElementCount);
+	RefreshCollisionV3(blockSize, chunkElementCount);
 	
 }
 
@@ -127,7 +127,7 @@ void AChunkActor::RefreshChunk()
 		}
 	}
 
-	RefreshCollisionV4(blockSize, chunkElementCount);
+	RefreshCollisionV3(blockSize, chunkElementCount);
 }
 
 void AChunkActor::Server_RefreshChunk_Implementation()
