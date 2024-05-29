@@ -43,6 +43,15 @@ struct PIXEL2D_API FChunkData
 	class AWorldHandler* WorldHandlerRef;
 
 	TArray<FPickupData> Pickups;
+
+	friend FArchive& operator<<(FArchive& Ar, FChunkData& ChunkData)
+	{
+		Ar << ChunkData.ChunkCoordinate;
+		Ar << ChunkData.BlockTextureID;
+		Ar << ChunkData.bHasCollision;
+		Ar << ChunkData.Pickups;
+		return Ar;
+	}
 };
 
 /**
@@ -101,5 +110,14 @@ struct PIXEL2D_API FPickupData
 
 	UPROPERTY()
 	FVector Location;
+
+	friend FArchive& operator<<(FArchive& Ar, FPickupData& PickupData)
+	{
+		Ar << PickupData.PickupType;
+		Ar << PickupData.Item;
+		Ar << PickupData.Location;
+
+		return Ar;
+	}
 
 };

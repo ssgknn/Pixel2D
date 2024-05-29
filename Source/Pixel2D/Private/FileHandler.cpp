@@ -10,51 +10,96 @@
 #include <Serialization/BufferArchive.h>
 
 
-void UFileHandler::SerializeChunkData(FArchive& Ar, FChunkData& ChunkData)
+
+FString UFileHandler::GetRegionFilePath(const FString& WorldName, const FIntPoint& RegionCoordinate) const
 {
-	Ar << ChunkData.ChunkCoordinate;
-	Ar << ChunkData.BlockTextureID;
-	Ar << ChunkData.bHasCollision;
+	FString DirectoryPath = FPaths::ProjectSavedDir() / TEXT("WORLDS") / WorldName;
+	FString FileName = FString::Printf(TEXT("region_%d_%d.dat"), RegionCoordinate.X, RegionCoordinate.Y);
+	return DirectoryPath / FileName;
 }
 
-void UFileHandler::SaveChunkDataToFile(const FString& FileName, const FChunkData& ChunkData)
+bool UFileHandler::SaveRegion(const FString& WorldName, const FIntPoint& RegionCoordinate, const TArray<FChunkData>& ChunkDataArray, int32 N)
 {
-	FBufferArchive Buffer;
-	FMemoryWriter Writer(Buffer);
-
-	FString SaveDirectory = FPaths::ProjectContentDir();
-	FString FilePath = SaveDirectory / "WorldData" / FileName;
-
-	// Serialize the chunk data
-	SerializeChunkData(Writer, const_cast<FChunkData&>(ChunkData));
-
-	if (FFileHelper::SaveArrayToFile(Buffer, *FilePath))
+	FString DirectoryPath = FPaths::ProjectSavedDir() / TEXT("WORLDS") / WorldName;
+	if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists(*DirectoryPath))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("%f_regionSaved"), *FileName));
+		FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*DirectoryPath);
 	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("save error"));
-	}
+
+	FString FilePath = DirectoryPath / FString::Printf(TEXT("region_%d_%d.dat"), RegionCoordinate.X, RegionCoordinate.Y);
+
+	TArray<uint8> BinaryData;
+	FMemoryWriter Writer(BinaryData, true);
+	Writer << N;
+	Writer << const_cast<TArray<FChunkData>&>(ChunkDataArray); // Note the cast for const correctness
+
+	return FFileHelper::SaveArrayToFile(BinaryData, *FilePath);
 }
 
-void UFileHandler::LoadChunkDataFromFile(const FString& FileName, FChunkData& ChunkData)
+bool UFileHandler::LoadRegion(const FString& WorldName, const FIntPoint& RegionCoordinate, TArray<FChunkData>& ChunkDataArray, int32 N)
 {
-	TArray<uint8> FileData;
+	FString FilePath = GetRegionFilePath(WorldName, RegionCoordinate);
 
-	FString SaveDirectory = FPaths::ProjectContentDir();
-	FString FilePath = SaveDirectory / "WorldData" / FileName;
-
-
-	if (FFileHelper::LoadFileToArray(FileData, *FilePath))
+	TArray<uint8> BinaryData;
+	if (!FFileHelper::LoadFileToArray(BinaryData, *FilePath))
 	{
-		FMemoryReader Reader(FileData, true);
+		return false;
+	}
 
-		// Deserialize the chunk data
-		SerializeChunkData(Reader, ChunkData);
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("file read error"));
-	}
+	FMemoryReader Reader(BinaryData, true);
+	Reader << N;
+	Reader << ChunkDataArray;
+
+	return true;
 }
+
+// oldCode
+// 
+// void UFileHandler::SerializeChunkData(FArchive& Ar, FChunkData& ChunkData)
+//{
+//	Ar << ChunkData.ChunkCoordinate;
+//	Ar << ChunkData.BlockTextureID;
+//	Ar << ChunkData.bHasCollision;
+//}
+//
+//void UFileHandler::SaveChunkDataToFile(const FString& FileName, const FChunkData& ChunkData)
+//{
+//	FBufferArchive Buffer;
+//	FMemoryWriter Writer(Buffer);
+//
+//	FString SaveDirectory = FPaths::ProjectContentDir();
+//	FString FilePath = SaveDirectory / "WorldData" / FileName;
+//
+//	// Serialize the chunk data
+//	SerializeChunkData(Writer, const_cast<FChunkData&>(ChunkData));
+//
+//	if (FFileHelper::SaveArrayToFile(Buffer, *FilePath))
+//	{
+//		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("%f_regionSaved"), *FileName));
+//	}
+//	else
+//	{
+//		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("save error"));
+//	}
+//}
+//
+//void UFileHandler::LoadChunkDataFromFile(const FString& FileName, FChunkData& ChunkData)
+//{
+//	TArray<uint8> FileData;
+//
+//	FString SaveDirectory = FPaths::ProjectContentDir();
+//	FString FilePath = SaveDirectory / "WorldData" / FileName;
+//
+//
+//	if (FFileHelper::LoadFileToArray(FileData, *FilePath))
+//	{
+//		FMemoryReader Reader(FileData, true);
+//
+//		// Deserialize the chunk data
+//		SerializeChunkData(Reader, ChunkData);
+//	}
+//	else
+//	{
+//		GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, TEXT("file read error"));
+//	}
+//}

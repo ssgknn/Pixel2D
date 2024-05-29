@@ -15,10 +15,19 @@ class PIXEL2D_API UFileHandler : public UObject
 {
 	GENERATED_BODY()
 	
+
 public:
-	void SerializeChunkData(FArchive& Ar, FChunkData& ChunkData);
+	bool SaveRegion(const FString& WorldName, const FIntPoint& RegionCoordinate, const TArray<FChunkData>& ChunkDataArray, int32 N);
+	bool LoadRegion(const FString& WorldName, const FIntPoint& RegionCoordinate, TArray<FChunkData>& ChunkDataArray, int32 N);
 
-	void SaveChunkDataToFile(const FString& FileName, const FChunkData& ChunkData);
+private:
+	FString GetRegionFilePath(const FString& WorldName, const FIntPoint& RegionCoordinate) const;
 
-	void LoadChunkDataFromFile(const FString& FileName, FChunkData& ChunkData);
+
+//public:
+//	void SerializeChunkData(FArchive& Ar, FChunkData& ChunkData);
+//
+//	void SaveChunkDataToFile(const FString& FileName, const FChunkData& ChunkData);
+//
+//	void LoadChunkDataFromFile(const FString& FileName, FChunkData& ChunkData);
 };
