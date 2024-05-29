@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Pickup.h"
-#include "Item.h"
+#include "../Item/Pickup.h"
+#include "../Item/Item.h"
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"

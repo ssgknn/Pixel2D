@@ -4,7 +4,7 @@
 #include "InventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/ActorChannel.h"
-#include "Item.h"
+#include "../Item/Item.h"
 
 #define LOCTEXT_NAMESPACE "Inventory"
 

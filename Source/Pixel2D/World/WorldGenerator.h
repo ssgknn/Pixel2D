@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "StructDataTypes.h"
+#include "../Framework/StructDataTypes.h"
 #include "WorldGenerator.generated.h"
 
 /**

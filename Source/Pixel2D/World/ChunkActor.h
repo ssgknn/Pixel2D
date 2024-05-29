@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "StructDataTypes.h"
+#include "../Framework/StructDataTypes.h"
 #include "ChunkActor.generated.h"
 
 UCLASS()

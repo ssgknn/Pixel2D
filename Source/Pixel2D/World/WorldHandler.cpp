@@ -2,12 +2,12 @@
 
 
 #include "WorldHandler.h"
-#include "ZDPlayerCharacterBase.h"
+#include "../Player/ZDPlayerCharacterBase.h"
 #include "ChunkActor.h"
-#include "PlayerStatsData.h"
+#include "../Player/PlayerStatsData.h"
 #include "WorldGenerator.h"
-#include "FileHandler.h"
-#include "Item.h"
+#include "../Framework/FileHandler.h"
+#include "../Item/Item.h"
 
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"

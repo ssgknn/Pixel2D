@@ -2,7 +2,7 @@
 
 
 #include "GearEquippableItem.h"
-#include "ZDPlayerCharacterBase.h"
+#include "../Player/ZDPlayerCharacterBase.h"
 
 
 UGearEquippableItem::UGearEquippableItem()

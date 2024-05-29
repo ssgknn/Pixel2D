@@ -4,7 +4,7 @@
 #include "Item.h"
 
 #include "Net/UnrealNetwork.h"
-#include "InventoryComponent.h"
+#include "../Components/InventoryComponent.h"
 
 
 #define LOCTEXT_NAMESPACE "Item"

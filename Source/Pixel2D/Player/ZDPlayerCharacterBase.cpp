@@ -18,13 +18,13 @@
 #include "Net/UnrealNetwork.h"
 #include "EngineUtils.h"
 
-#include "Pickup.h"
-#include "Item.h"
-#include "InventoryComponent.h"
-#include "WorldHandler.h"
-#include "ChunkActor.h"
-#include "EquippableItem.h"
-#include "GearEquippableItem.h"
+#include "../Item/Pickup.h"
+#include "../Item/Item.h"
+#include "../Components/InventoryComponent.h"
+#include "../World/WorldHandler.h"
+#include "../World/ChunkActor.h"
+#include "../Item/EquippableItem.h"
+#include "../Item/GearEquippableItem.h"
 
 
 AZDPlayerCharacterBase::AZDPlayerCharacterBase()

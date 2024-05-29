@@ -4,8 +4,8 @@
 #include "EquippableItem.h"
 #include "Net/UnrealNetwork.h"
 
-#include "InventoryComponent.h"
-#include "ZDPlayerCharacterBase.h"
+#include "../Components/InventoryComponent.h"
+#include "../Player/ZDPlayerCharacterBase.h"
 
 #define LOCTEXT_NAMESPACE "EquippableItem"
 

@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Pixel2DGameMode.h"
-#include "ZDPlayerCharacterBase.h"
+#include "../Player/ZDPlayerCharacterBase.h"
 #include "UObject/ConstructorHelpers.h"
 
 APixel2DGameMode::APixel2DGameMode()

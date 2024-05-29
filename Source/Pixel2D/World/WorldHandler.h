@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "StructDataTypes.h"
+#include "../Framework/StructDataTypes.h"
 #include "WorldHandler.generated.h"
 
 UCLASS()

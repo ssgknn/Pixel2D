@@ -8,9 +8,9 @@
 #include "PaperSpriteComponent.h"
 
 #include "Item.h"
-#include "InventoryComponent.h"
-#include "ZDPlayerCharacterBase.h"
-#include "Pixel2DPlayerController.h"
+#include "../Components/InventoryComponent.h"
+#include "../Player/ZDPlayerCharacterBase.h"
+#include "../Player/Pixel2DPlayerController.h"
 
 // Sets default values
 APickup::APickup()
