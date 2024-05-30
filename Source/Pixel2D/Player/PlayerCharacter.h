@@ -1,11 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "PaperZDCharacter.h"
 #include "InputActionValue.h"
-#include "ZDPlayerCharacterBase.generated.h"
+#include "PlayerCharacter.generated.h"
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquippedItemsChanged, const EEquippableSlot, Slot, const UEquippableItem*, Item);
@@ -14,12 +14,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquippedItemsChanged, const EEqu
  * 
  */
 UCLASS()
-class PIXEL2D_API AZDPlayerCharacterBase : public APaperZDCharacter
+class PIXEL2D_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	AZDPlayerCharacterBase();
+	APlayerCharacter();
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -127,7 +127,7 @@ protected:
 
 	//Begin being looted by a player
 	UFUNCTION()
-	void BeginLootingPlayer(class AZDPlayerCharacterBase* Character);
+	void BeginLootingPlayer(class APlayerCharacter* Character);
 
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
 	void ServerSetLootSource(class UInventoryComponent* NewLootSource);
@@ -244,10 +244,11 @@ public:
 
 	void SetPlayerID(uint8 ID);
 	
+	UFUNCTION(BlueprintCallable)
+	void InitializeChunkVariables(AWorldHandler* worldHandler);
+
 private:
 	
-	void InitializeChunkVariables();
-
 	UFUNCTION()
 	void CalculateChunkModification(FPlacementData placementData);
 

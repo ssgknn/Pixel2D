@@ -14,4 +14,10 @@ class PIXEL2D_API UMainMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
+
+public:
+	UFUNCTION(BlueprintCallable)
+	TArray<FString> GetWorldNames();
+
+
 };

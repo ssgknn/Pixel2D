@@ -100,7 +100,7 @@ bool UItem::ShouldShowInInventory() const
 	return true;
 }
 
-void UItem::Use(class AZDPlayerCharacterBase* Character)
+void UItem::Use(class APlayerCharacter* Character)
 {
 
 }

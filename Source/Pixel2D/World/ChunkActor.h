@@ -42,8 +42,8 @@ public:
 	FChunkData ChunkData;
 
 private:
-	/*UPROPERTY()
-	class AWorldHandler* WorldHandlerRef;*/
+	UPROPERTY()
+	class AWorldHandler* WorldHandlerRef;
 
 	UPROPERTY()
 	USceneComponent* AttachComponent;

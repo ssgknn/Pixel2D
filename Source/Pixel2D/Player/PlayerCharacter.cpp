@@ -1,9 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ZDPlayerCharacterBase.h"
-#include "PaperCharacter.h"
-#include "PaperFlipbookComponent.h"
+#include "PlayerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -26,8 +24,7 @@
 #include "../Item/EquippableItem.h"
 #include "../Item/GearEquippableItem.h"
 
-
-AZDPlayerCharacterBase::AZDPlayerCharacterBase()
+APlayerCharacter::APlayerCharacter()
 {
 	bReplicates = true;
 
@@ -47,8 +44,8 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	PlayerInventory = CreateDefaultSubobject<UInventoryComponent>("PlayerInventory");
 	PlayerInventory->SetCapacity(20);
 	PlayerInventory->SetWeightCapacity(80.f);
-	PlayerInventory->OnItemAdded.AddDynamic(this, &AZDPlayerCharacterBase::ItemAddedToInventory);
-	PlayerInventory->OnItemRemoved.AddDynamic(this, &AZDPlayerCharacterBase::ItemRemovedFromInventory);
+	PlayerInventory->OnItemAdded.AddDynamic(this, &APlayerCharacter::ItemAddedToInventory);
+	PlayerInventory->OnItemRemoved.AddDynamic(this, &APlayerCharacter::ItemRemovedFromInventory);
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -65,14 +62,14 @@ AZDPlayerCharacterBase::AZDPlayerCharacterBase()
 	SetReplicates(true);
 }
 
-void AZDPlayerCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AZDPlayerCharacterBase, CharacterRotation);
+	DOREPLIFETIME(APlayerCharacter, CharacterRotation);
 }
 
-void AZDPlayerCharacterBase::BeginPlay()
+void APlayerCharacter::BeginPlay()
 {
 
 	Super::BeginPlay();
@@ -130,15 +127,9 @@ void AZDPlayerCharacterBase::BeginPlay()
 	PlayerMaterials.Add(EEquippableSlot::EIS_Backpack, MI_BackPack);
 
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
-
-
-	// SET VARIABLES
-	InitializeChunkVariables();
-
-
 }
 
-void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
@@ -148,18 +139,18 @@ void AZDPlayerCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		//Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 
 		//Click event
-		EnhancedInputComponent->BindAction(PrimaryClickAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::PrimaryClick);
+		EnhancedInputComponent->BindAction(PrimaryClickAction, ETriggerEvent::Triggered, this, &APlayerCharacter::PrimaryClick);
 
 		//Click event
-		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Triggered, this, &AZDPlayerCharacterBase::InventoryOpenClose);
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Triggered, this, &APlayerCharacter::InventoryOpenClose);
 
 	}
 }
 
-void AZDPlayerCharacterBase::Tick(float DeltaTime)
+void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -175,7 +166,7 @@ void AZDPlayerCharacterBase::Tick(float DeltaTime)
 
 }
 
-void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
+void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -209,12 +200,12 @@ void AZDPlayerCharacterBase::Move(const FInputActionValue& Value)
 	}
 }
 
-void AZDPlayerCharacterBase::Look(const FInputActionValue& Value)
+void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 
 }
 
-void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
+void APlayerCharacter::PrimaryClick(const FInputActionValue& Value)
 {
 	
 	FPlacementData testData;
@@ -239,11 +230,11 @@ void AZDPlayerCharacterBase::PrimaryClick(const FInputActionValue& Value)
 	
 }
 
-void AZDPlayerCharacterBase::InventoryOpenClose(const FInputActionValue& Value)
+void APlayerCharacter::InventoryOpenClose(const FInputActionValue& Value)
 {
 }
 
-void AZDPlayerCharacterBase::DEBUG_Key()
+void APlayerCharacter::DEBUG_Key()
 {
 	//DEBUG
 
@@ -260,8 +251,7 @@ void AZDPlayerCharacterBase::DEBUG_Key()
 	}
 }
 
-
-void AZDPlayerCharacterBase::OnLootSourceOwnerDestroyed(AActor* DestroyedActor)
+void APlayerCharacter::OnLootSourceOwnerDestroyed(AActor* DestroyedActor)
 {
 	//Remove loot source 
 	if (HasAuthority() && LootSource && DestroyedActor == LootSource->GetOwner())
@@ -270,10 +260,10 @@ void AZDPlayerCharacterBase::OnLootSourceOwnerDestroyed(AActor* DestroyedActor)
 	}
 }
 
-void AZDPlayerCharacterBase::OnRep_LootSource()
+void APlayerCharacter::OnRep_LootSource()
 {
 	////Bring up or remove the looting menu 
-	//if (APixel2DPlayerController* PC = Cast<AZDPlayerCharacterBase>(GetController()))
+	//if (APixel2DPlayerController* PC = Cast<AZDAPlayerCharacterBase>(GetController()))
 	//{
 	//	if (PC->IsLocalController())
 	//	{
@@ -293,29 +283,27 @@ void AZDPlayerCharacterBase::OnRep_LootSource()
 }
 
 // -------- OnRep --------
-void AZDPlayerCharacterBase::OnRep_CharacterRotation()
+void APlayerCharacter::OnRep_CharacterRotation()
 {
 	if (CharacterRotation)
 	{
 		//Controller->SetControlRotation(FRotator(0.0, 0.0, 0.0));
 		FRotator Rotation = FRotator(0.0f, 180.0f, 0.0f);
-		GetSprite()->SetWorldRotation(Rotation);
 		PlayerMesh->SetRelativeScale3D(FVector(1, -1, 1));
 	}
 	else
 	{
 		//Controller->SetControlRotation(FRotator(0.0, 180.0, 180.0));
 		FRotator Rotation = FRotator(0.0f, 0.0f, 0.0f);
-		GetSprite()->SetWorldRotation(Rotation);
 		PlayerMesh->SetRelativeScale3D(FVector(1, 1, 1));
 	}
 }
 
-void AZDPlayerCharacterBase::OnRep_EquippedWeapon()
+void APlayerCharacter::OnRep_EquippedWeapon()
 {
 }
 
-//void AZDPlayerCharacterBase::PrintMousePositionToWorld()
+//void AZDAPlayerCharacterBase::PrintMousePositionToWorld()
 //{
 //	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 //	if (PlayerController)
@@ -343,9 +331,9 @@ void AZDPlayerCharacterBase::OnRep_EquippedWeapon()
 //}
 
 
-void AZDPlayerCharacterBase::InitializeChunkVariables()
+void APlayerCharacter::InitializeChunkVariables(AWorldHandler* worldHandler)
 {
-	for (TActorIterator<AWorldHandler> It(GetWorld()); It; ++It)
+	/*for (TActorIterator<AWorldHandler> It(GetWorld()); It; ++It)
 	{
 		AWorldHandler* FoundHandler = *It;
 		if (FoundHandler)
@@ -353,20 +341,21 @@ void AZDPlayerCharacterBase::InitializeChunkVariables()
 			WorldHandlerRef = FoundHandler;
 			break;
 		}
-	}
+	}*/
 
+	WorldHandlerRef = worldHandler;
 	ChunkSize_player = WorldHandlerRef->ChunkSize;
 	ChunkSizeHalf_player = WorldHandlerRef->ChunkSizeHalf;
 
 	WorldHandlerRef->Server_RegisterPlayerID(this);
 }
 
-void AZDPlayerCharacterBase::SetPlayerID(uint8 ID)
+void APlayerCharacter::SetPlayerID(uint8 ID)
 {
 	PlayerID = ID;
 }
 
-void AZDPlayerCharacterBase::CalculateChunkModification(FPlacementData placementData)
+void APlayerCharacter::CalculateChunkModification(FPlacementData placementData)
 {
 	if (!WorldHandlerRef)
 	{
@@ -607,9 +596,9 @@ void AZDPlayerCharacterBase::CalculateChunkModification(FPlacementData placement
 
 }
 
-FIntPoint AZDPlayerCharacterBase::CalculateChunkCoordPlayerAt()
+FIntPoint APlayerCharacter::CalculateChunkCoordPlayerAt()
 {
-	if (WorldHandlerRef->ChunkSize > 0)
+	if (ChunkSize_player > 0)
 	{
 		FIntPoint toReturn = FIntPoint(FMath::Floor((GetActorLocation().X - ChunkSizeHalf_player) / ChunkSize_player) + 1, FMath::Floor((GetActorLocation().Z + ChunkSizeHalf_player) / ChunkSize_player));
 		return toReturn;
@@ -617,7 +606,7 @@ FIntPoint AZDPlayerCharacterBase::CalculateChunkCoordPlayerAt()
 	return FIntPoint(0, 0);
 }
 
-uint8 AZDPlayerCharacterBase::ShouldRequestChunkLoad()
+uint8 APlayerCharacter::ShouldRequestChunkLoad()
 {
 	if (CalculateChunkCoordPlayerAt() != CenterChunkCoords)
 	{
@@ -627,7 +616,7 @@ uint8 AZDPlayerCharacterBase::ShouldRequestChunkLoad()
 	return false;
 }
 
-void AZDPlayerCharacterBase::RequestChunkLoad(uint8 playerID, FIntPoint newChenterChunk)
+void APlayerCharacter::RequestChunkLoad(uint8 playerID, FIntPoint newChenterChunk)
 {
 	if (HasAuthority())
 	{
@@ -639,19 +628,19 @@ void AZDPlayerCharacterBase::RequestChunkLoad(uint8 playerID, FIntPoint newChent
 	}
 }
 
-void AZDPlayerCharacterBase::Server_RequestChunkLoad_Implementation(uint8 playerID, FIntPoint newChenterChunk)
+void APlayerCharacter::Server_RequestChunkLoad_Implementation(uint8 playerID, FIntPoint newChenterChunk)
 {
 	WorldHandlerRef->LoadChunks(playerID, newChenterChunk);
 }
 
-void AZDPlayerCharacterBase::Server_RequestRegionUpdate_Implementation(const TArray<FChunkChangeData>& ChunkChangeData)
+void APlayerCharacter::Server_RequestRegionUpdate_Implementation(const TArray<FChunkChangeData>& ChunkChangeData)
 {
 	WorldHandlerRef->UpdateRegionData(ChunkChangeData);
 }
 
 
 
-void AZDPlayerCharacterBase::ClientShowNotification_Implementation(const FText& Message)
+void APlayerCharacter::ClientShowNotification_Implementation(const FText& Message)
 {
 	ShowNotification_BP(Message);
 
@@ -662,7 +651,7 @@ void AZDPlayerCharacterBase::ClientShowNotification_Implementation(const FText& 
 	}*/
 }
 
-void AZDPlayerCharacterBase::UseItem(UItem* Item)
+void APlayerCharacter::UseItem(UItem* Item)
 {
 	if (!HasAuthority() && Item)
 	{
@@ -679,13 +668,13 @@ void AZDPlayerCharacterBase::UseItem(UItem* Item)
 
 	if (Item)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDPlayerCharacterBase::UseItem()"));
+		GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::Red, TEXT("ZDAPlayerCharacterBase::UseItem()"));
 		Item->OnUse(this);
 		Item->Use(this);
 	}
 }
 
-void AZDPlayerCharacterBase::DropItem(UItem* Item, const int32 Quantity)
+void APlayerCharacter::DropItem(UItem* Item, const int32 Quantity)
 {
 	if (PlayerInventory && Item && PlayerInventory->FindItem(Item))
 	{
@@ -724,7 +713,7 @@ void AZDPlayerCharacterBase::DropItem(UItem* Item, const int32 Quantity)
 	}
 }
 
-void AZDPlayerCharacterBase::ReorderPlayerItems(int idxAt, int newIdx)
+void APlayerCharacter::ReorderPlayerItems(int idxAt, int newIdx)
 {
 	if (HasAuthority())
 	{
@@ -737,25 +726,25 @@ void AZDPlayerCharacterBase::ReorderPlayerItems(int idxAt, int newIdx)
 
 }
 
-void AZDPlayerCharacterBase::Server_ReorderPlayerItems_Implementation(int idxAt, int newIdx)
+void APlayerCharacter::Server_ReorderPlayerItems_Implementation(int idxAt, int newIdx)
 {
 	ReorderPlayerItems(idxAt, newIdx);
 }
 
-bool AZDPlayerCharacterBase::Server_ReorderPlayerItems_Validate(int idxAt, int newIdx)
+bool APlayerCharacter::Server_ReorderPlayerItems_Validate(int idxAt, int newIdx)
 {
 	return true;
 }
 
-void AZDPlayerCharacterBase::ItemAddedToInventory(UItem* Item)
+void APlayerCharacter::ItemAddedToInventory(UItem* Item)
 {
 }
 
-void AZDPlayerCharacterBase::ItemRemovedFromInventory(UItem* Item)
+void APlayerCharacter::ItemRemovedFromInventory(UItem* Item)
 {
 }
 
-bool AZDPlayerCharacterBase::EquipItem(UEquippableItem* Item)
+bool APlayerCharacter::EquipItem(UEquippableItem* Item)
 {
 	if (EquippedItems.Find(Item->Slot))
 	{
@@ -767,7 +756,7 @@ bool AZDPlayerCharacterBase::EquipItem(UEquippableItem* Item)
 	return true;
 }
 
-bool AZDPlayerCharacterBase::UnEquipItem(UEquippableItem* Item)
+bool APlayerCharacter::UnEquipItem(UEquippableItem* Item)
 {
 	if (Item)
 	{
@@ -787,7 +776,7 @@ bool AZDPlayerCharacterBase::UnEquipItem(UEquippableItem* Item)
 	return false;
 }
 
-void AZDPlayerCharacterBase::EquipGear(UGearEquippableItem* Gear)
+void APlayerCharacter::EquipGear(UGearEquippableItem* Gear)
 {
 
 	if (UMaterialInstanceDynamic* DynamicMaterialInstance = GetSlotMaterialInstance(Gear->Slot))
@@ -811,7 +800,7 @@ void AZDPlayerCharacterBase::EquipGear(UGearEquippableItem* Gear)
 	}*/
 }
 
-void AZDPlayerCharacterBase::UnEquipGear(const EEquippableSlot Slot)
+void APlayerCharacter::UnEquipGear(const EEquippableSlot Slot)
 {
 	//if (UMaterialInstanceDynamic* EquippableMesh = GetSlotMaterialInstance(Slot))
 	//{
@@ -836,7 +825,7 @@ void AZDPlayerCharacterBase::UnEquipGear(const EEquippableSlot Slot)
 	//}
 }
 
-void AZDPlayerCharacterBase::EquipWeapon(UWeaponItem* WeaponItem)
+void APlayerCharacter::EquipWeapon(UWeaponItem* WeaponItem)
 {
 	//if (WeaponItem && WeaponItem->WeaponClass && HasAuthority())
 	//{
@@ -863,7 +852,7 @@ void AZDPlayerCharacterBase::EquipWeapon(UWeaponItem* WeaponItem)
 	//}
 }
 
-void AZDPlayerCharacterBase::UnEquipWeapon()
+void APlayerCharacter::UnEquipWeapon()
 {
 	/*if (HasAuthority() && EquippedWeapon)
 	{
@@ -874,7 +863,7 @@ void AZDPlayerCharacterBase::UnEquipWeapon()
 	}*/
 }
 
-float AZDPlayerCharacterBase::ModifyHealth(const float Delta)
+float APlayerCharacter::ModifyHealth(const float Delta)
 {
 	const float OldHealth = Health;
 
@@ -883,17 +872,17 @@ float AZDPlayerCharacterBase::ModifyHealth(const float Delta)
 	return Health - OldHealth;
 }
 
-void AZDPlayerCharacterBase::OnRep_Health(float OldHealth)
+void APlayerCharacter::OnRep_Health(float OldHealth)
 {
 	OnHealthModified(Health - OldHealth);
 }
 
-void AZDPlayerCharacterBase::SetLootSource(UInventoryComponent* NewLootSource)
+void APlayerCharacter::SetLootSource(UInventoryComponent* NewLootSource)
 {
 	/**If the thing we're looting gets destroyed, we need to tell the client to remove their Loot screen*/
 	if (NewLootSource && NewLootSource->GetOwner())
 	{
-		NewLootSource->GetOwner()->OnDestroyed.AddUniqueDynamic(this, &AZDPlayerCharacterBase::OnLootSourceOwnerDestroyed);
+		NewLootSource->GetOwner()->OnDestroyed.AddUniqueDynamic(this, &APlayerCharacter::OnLootSourceOwnerDestroyed);
 	}
 
 	if (HasAuthority())
@@ -901,7 +890,7 @@ void AZDPlayerCharacterBase::SetLootSource(UInventoryComponent* NewLootSource)
 		if (NewLootSource)
 		{
 			//Looting a player keeps their body alive for an extra 2 minutes to provide enough time to loot their items
-			if (AZDPlayerCharacterBase* Character = Cast<AZDPlayerCharacterBase>(NewLootSource->GetOwner()))
+			if (APlayerCharacter* Character = Cast<APlayerCharacter>(NewLootSource->GetOwner()))
 			{
 				Character->SetLifeSpan(120.f);
 			}
@@ -916,7 +905,7 @@ void AZDPlayerCharacterBase::SetLootSource(UInventoryComponent* NewLootSource)
 	}
 }
 
-void AZDPlayerCharacterBase::LootItem(UItem* ItemToGive)
+void APlayerCharacter::LootItem(UItem* ItemToGive)
 {
 	if (HasAuthority())
 	{
@@ -944,22 +933,22 @@ void AZDPlayerCharacterBase::LootItem(UItem* ItemToGive)
 	}
 }
 
-void AZDPlayerCharacterBase::Server_LootItem_Implementation(UItem* ItemToLoot)
+void APlayerCharacter::Server_LootItem_Implementation(UItem* ItemToLoot)
 {
 	LootItem(ItemToLoot);
 }
 
-bool AZDPlayerCharacterBase::Server_LootItem_Validate(UItem* ItemToLoot)
+bool APlayerCharacter::Server_LootItem_Validate(UItem* ItemToLoot)
 {
 	return true;
 }
 
-bool AZDPlayerCharacterBase::IsLooting() const
+bool APlayerCharacter::IsLooting() const
 {
 	return LootSource != nullptr;
 }
 
-UMaterialInstanceDynamic* AZDPlayerCharacterBase::GetSlotMaterialInstance(const EEquippableSlot Slot)
+UMaterialInstanceDynamic* APlayerCharacter::GetSlotMaterialInstance(const EEquippableSlot Slot)
 {
 	if (PlayerMaterials.Contains(Slot))
 	{
@@ -968,7 +957,7 @@ UMaterialInstanceDynamic* AZDPlayerCharacterBase::GetSlotMaterialInstance(const 
 	return nullptr;
 }
 
-void AZDPlayerCharacterBase::BeginLootingPlayer(AZDPlayerCharacterBase* Character)
+void APlayerCharacter::BeginLootingPlayer(APlayerCharacter* Character)
 {
 	if (Character)
 	{
@@ -979,13 +968,13 @@ void AZDPlayerCharacterBase::BeginLootingPlayer(AZDPlayerCharacterBase* Characte
 
 // -------- RPC --------
 // 
-//bool AZDPlayerCharacterBase::Server_SetCharacterRotation_Validate(uint8 NewRotation)
+//bool AZDAPlayerCharacterBase::Server_SetCharacterRotation_Validate(uint8 NewRotation)
 //{
 //	// You can add validation logic here if needed
 //	return true;
 //}
 
-void AZDPlayerCharacterBase::Server_SetCharacterRotation_Implementation(uint8 NewRotation)
+void APlayerCharacter::Server_SetCharacterRotation_Implementation(uint8 NewRotation)
 {
 	// This function is called on the server when a client requests to change CharacterRotation
 	if (HasAuthority())
@@ -998,32 +987,32 @@ void AZDPlayerCharacterBase::Server_SetCharacterRotation_Implementation(uint8 Ne
 	}
 }
 
-void AZDPlayerCharacterBase::Server_UseItem_Implementation(class UItem* Item)
+void APlayerCharacter::Server_UseItem_Implementation(class UItem* Item)
 {
 	UseItem(Item);
 }
 
-bool AZDPlayerCharacterBase::Server_UseItem_Validate(class UItem* Item)
+bool APlayerCharacter::Server_UseItem_Validate(class UItem* Item)
 {
 	return true;
 }
 
-void AZDPlayerCharacterBase::Server_DropItem_Implementation(class UItem* Item, const int32 Quantity)
+void APlayerCharacter::Server_DropItem_Implementation(class UItem* Item, const int32 Quantity)
 {
 	DropItem(Item, Quantity);
 }
 
-bool AZDPlayerCharacterBase::Server_DropItem_Validate(class UItem* Item, const int32 Quantity)
+bool APlayerCharacter::Server_DropItem_Validate(class UItem* Item, const int32 Quantity)
 {
 	return true;
 }
 
-void AZDPlayerCharacterBase::ServerSetLootSource_Implementation(class UInventoryComponent* NewLootSource)
+void APlayerCharacter::ServerSetLootSource_Implementation(class UInventoryComponent* NewLootSource)
 {
 	SetLootSource(NewLootSource);
 }
 
-bool AZDPlayerCharacterBase::ServerSetLootSource_Validate(class UInventoryComponent* NewLootSource)
+bool APlayerCharacter::ServerSetLootSource_Validate(class UInventoryComponent* NewLootSource)
 {
 	return true;
 }

@@ -19,6 +19,7 @@ class PIXEL2D_API UFileHandler : public UObject
 public:
 	bool SaveRegion(const FString& WorldName, const FIntPoint& RegionCoordinate, const TArray<FChunkData>& ChunkDataArray, int32 N);
 	bool LoadRegion(const FString& WorldName, const FIntPoint& RegionCoordinate, TArray<FChunkData>& ChunkDataArray, int32 N);
+	bool LoadChunksToWorldData(const FString& WorldName, TMap<FIntPoint, FChunkData>& ChunkDataMap);
 
 private:
 	FString GetRegionFilePath(const FString& WorldName, const FIntPoint& RegionCoordinate) const;

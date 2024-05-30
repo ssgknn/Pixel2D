@@ -55,7 +55,7 @@ protected:
 
 	//Called when a player takes the pickup
 	UFUNCTION()
-	void OnTakePickup(class AZDPlayerCharacterBase* Taker);
+	void OnTakePickup(class APlayerCharacter* Taker);
 
 	/** A sphere to detect pickups*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")

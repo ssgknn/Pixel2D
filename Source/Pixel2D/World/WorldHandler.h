@@ -20,7 +20,7 @@ public:
 
 	// ChunkDATA
 	UPROPERTY()
-	TArray<FChunkData> RegionData;
+	TMap<FIntPoint, FChunkData> WorldData;
 
 	UPROPERTY(ReplicatedUsing = OnRep_RegionDataChanged)
 	TArray<FChunkChangeData> ChunkDataChange;
@@ -58,11 +58,11 @@ public:
 	class UWorldGenerator* WorldGen;
 
 	UPROPERTY()
-	class UFileHandler* FileHandler;
+	class UFileHandler* fileHandler;
 
 	// PlayerActors IDs
 	UPROPERTY()
-	TMap<class AZDPlayerCharacterBase*, uint8> PlayerIDs;
+	TMap<class APlayerCharacter*, uint8> PlayerIDs;
 
 	uint8 currentPlayerID = 0;
 
@@ -83,7 +83,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(Server, Reliable)
-	void Server_RegisterPlayerID(class AZDPlayerCharacterBase* playerToRegister);
+	void Server_RegisterPlayerID(class APlayerCharacter* playerToRegister);
+
+	UFUNCTION(BlueprintCallable)
+	void LoadWorldIn(const FString& WorldName);
 
 	/*UFUNCTION(Server, Reliable)
 	void Server_AddPlayerChunkCoordinates(FIntPoint newChenterChunkCoord);*/
@@ -116,11 +119,11 @@ public:
 	//UFUNCTION(Client, Reliable)
 	//void Client_UpdateWorldData(TArray<FChunkData> chunksToUpdate);
 
-	void GetFChunkDataByChunkCoordinate(FChunkData& desiredChunkData, const FIntPoint& TargetChunkCoordinate);
+	//void GetFChunkDataByChunkCoordinate(FChunkData& desiredChunkData, const FIntPoint& TargetChunkCoordinate);
 
 private:
-	int32 FindChunkIndexByCoordinate(const FIntPoint& TargetCoordinate);
-	int32 FindActiveChunkIndexByCoordinate(const FIntPoint& TargetCoordinate);
+	//int32 FindChunkIndexByCoordinate(const FIntPoint& TargetCoordinate);
+	//int32 FindActiveChunkIndexByCoordinate(const FIntPoint& TargetCoordinate);
 
 	void InitializeData();
 

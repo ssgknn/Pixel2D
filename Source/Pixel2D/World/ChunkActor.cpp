@@ -77,8 +77,8 @@ void AChunkActor::LoadChunk()
 	TextComponent->AddRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 	TextComponent->AddRelativeLocation(FVector(0.0f, 1.0f, 0.0f));
 
-	int32 blockSize = ChunkData.WorldHandlerRef->BlockSize;
-	int32 chunkElementCount = ChunkData.WorldHandlerRef->ChunkElementCount;
+	int32 blockSize = WorldHandlerRef->BlockSize;
+	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
 
 	TileMapComponent->CreateNewTileMap(chunkElementCount, chunkElementCount, blockSize, blockSize, 1.0, true);
 	TileMapComponent->SetRelativeLocation(FVector(blockSize / 2.0f, 0.0f, -blockSize / 2.0f));
@@ -98,8 +98,8 @@ void AChunkActor::LoadChunk()
 		}
 	}
 
-	CollisionBoxComponent->SetBoxExtent(FVector(ChunkData.WorldHandlerRef->ChunkSize * 0.5f, 20.0f, ChunkData.WorldHandlerRef->ChunkSize * 0.5f));
-	CollisionBoxComponent->SetRelativeLocation(FVector(ChunkData.WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(ChunkData.WorldHandlerRef->ChunkSize) * 0.5f));
+	CollisionBoxComponent->SetBoxExtent(FVector(WorldHandlerRef->ChunkSize * 0.5f, 20.0f, WorldHandlerRef->ChunkSize * 0.5f));
+	CollisionBoxComponent->SetRelativeLocation(FVector(WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(WorldHandlerRef->ChunkSize) * 0.5f));
 
 	RefreshCollisionV3(blockSize, chunkElementCount);
 	
@@ -107,8 +107,8 @@ void AChunkActor::LoadChunk()
 
 void AChunkActor::RefreshChunk()
 {
-	int32 blockSize = ChunkData.WorldHandlerRef->BlockSize;
-	int32 chunkElementCount = ChunkData.WorldHandlerRef->ChunkElementCount;
+	int32 blockSize = WorldHandlerRef->BlockSize;
+	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
 
 	TileMapComponent->CreateNewTileMap(chunkElementCount, chunkElementCount, blockSize, blockSize, 1.0, true);
 

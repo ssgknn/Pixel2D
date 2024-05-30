@@ -5,7 +5,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "../Components/InventoryComponent.h"
-#include "../Player/ZDPlayerCharacterBase.h"
+#include "../Player/PlayerCharacter.h"
 
 #define LOCTEXT_NAMESPACE "EquippableItem"
 
@@ -23,7 +23,7 @@ void UEquippableItem::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 	DOREPLIFETIME(UEquippableItem, bEquipped);
 }
 
-void UEquippableItem::Use(class AZDPlayerCharacterBase* Character)
+void UEquippableItem::Use(APlayerCharacter* Character)
 {
 	if (Character && Character->HasAuthority())
 	{
@@ -38,7 +38,7 @@ void UEquippableItem::Use(class AZDPlayerCharacterBase* Character)
 	}
 }
 
-bool UEquippableItem::Equip(class AZDPlayerCharacterBase* Character)
+bool UEquippableItem::Equip(APlayerCharacter* Character)
 {
 	if (Character)
 	{
@@ -47,7 +47,7 @@ bool UEquippableItem::Equip(class AZDPlayerCharacterBase* Character)
 	return false;
 }
 
-bool UEquippableItem::UnEquip(class AZDPlayerCharacterBase* Character)
+bool UEquippableItem::UnEquip(APlayerCharacter* Character)
 {
 	if (Character)
 	{
@@ -64,7 +64,7 @@ bool UEquippableItem::ShouldShowInInventory() const
 void UEquippableItem::AddedToInventory(class UInventoryComponent* Inventory)
 {
 	//If the player looted an item don't equip it
-	if (AZDPlayerCharacterBase* Character = Cast<AZDPlayerCharacterBase>(Inventory->GetOwner()))
+	if (APlayerCharacter* Character = Cast<APlayerCharacter>(Inventory->GetOwner()))
 	{
 		if (Character && !Character->IsLooting())
 		{
@@ -86,7 +86,7 @@ void UEquippableItem::SetEquipped(bool bNewEquipped)
 
 void UEquippableItem::EquipStatusChanged()
 {
-	if (AZDPlayerCharacterBase* Character = Cast<AZDPlayerCharacterBase>(GetOuter()))
+	if (APlayerCharacter* Character = Cast<APlayerCharacter>(GetOuter()))
 	{
 		UseActionText = bEquipped ? LOCTEXT("UnequipText", "Unequip") : LOCTEXT("EquipText", "Equip");
 

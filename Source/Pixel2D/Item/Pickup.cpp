@@ -9,7 +9,7 @@
 
 #include "Item.h"
 #include "../Components/InventoryComponent.h"
-#include "../Player/ZDPlayerCharacterBase.h"
+#include "../Player/PlayerCharacter.h"
 #include "../Player/Pixel2DPlayerController.h"
 
 // Sets default values
@@ -131,9 +131,9 @@ void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 {
 	if (HasAuthority())
 	{
-		if (AZDPlayerCharacterBase* PlayerCharacterActor = Cast<AZDPlayerCharacterBase>(OtherActor))
+		if (APlayerCharacter* APlayerCharacterActor = Cast<APlayerCharacter>(OtherActor))
 		{
-			OnTakePickup(PlayerCharacterActor);
+			OnTakePickup(APlayerCharacterActor);
 		}
 		if (APickup* OtherPickup = Cast<APickup>(OtherActor))
 		{
@@ -170,7 +170,7 @@ void APickup::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent
 }
 #endif
 
-void APickup::OnTakePickup(class AZDPlayerCharacterBase* Taker)
+void APickup::OnTakePickup(class APlayerCharacter* Taker)
 {
 	if (!Taker)
 	{

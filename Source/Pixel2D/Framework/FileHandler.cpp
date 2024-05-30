@@ -30,7 +30,7 @@ bool UFileHandler::SaveRegion(const FString& WorldName, const FIntPoint& RegionC
 
 	TArray<uint8> BinaryData;
 	FMemoryWriter Writer(BinaryData, true);
-	Writer << N;
+	//Writer << N;
 	Writer << const_cast<TArray<FChunkData>&>(ChunkDataArray); // Note the cast for const correctness
 
 	return FFileHelper::SaveArrayToFile(BinaryData, *FilePath);
@@ -47,8 +47,45 @@ bool UFileHandler::LoadRegion(const FString& WorldName, const FIntPoint& RegionC
 	}
 
 	FMemoryReader Reader(BinaryData, true);
-	Reader << N;
+	//Reader << N;
 	Reader << ChunkDataArray;
+
+	return true;
+}
+
+bool UFileHandler::LoadChunksToWorldData(const FString& WorldName, TMap<FIntPoint, FChunkData>& ChunkDataMap)
+{
+	// Get all files with the .chunk extension in the specified folder
+	TArray<FString> ChunkFiles;
+	FString DirectoryPath = FPaths::ProjectSavedDir() / TEXT("WORLDS") / WorldName;
+	IFileManager::Get().FindFiles(ChunkFiles, *DirectoryPath, TEXT("*.dat"));
+
+	for (const FString& ChunkFileName : ChunkFiles)
+	{
+		FString FilePath = DirectoryPath / ChunkFileName;
+
+		TArray<uint8> BinaryData;
+		if (!FFileHelper::LoadFileToArray(BinaryData, *FilePath))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to load file: %s"), *FilePath);
+			continue; // Skip this file and continue with the next
+		}
+
+		FMemoryReader Reader(BinaryData, true);
+		//int32 ChunkId;
+		TArray<FChunkData> ChunkData;
+
+		// Assuming the file starts with an int32 ChunkId followed by the FChunkData
+		//Reader << ChunkId;
+		ChunkData.Empty();
+		Reader << ChunkData;
+
+		for (FChunkData& Chunk : ChunkData)
+		{
+			ChunkDataMap.Add(Chunk.ChunkCoordinate, Chunk);
+		}
+	
+	}
 
 	return true;
 }

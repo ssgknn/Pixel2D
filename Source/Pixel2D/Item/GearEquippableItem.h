@@ -18,8 +18,8 @@ public:
 
 	UGearEquippableItem();
 
-	virtual bool Equip(class AZDPlayerCharacterBase* Character) override;
-	virtual bool UnEquip(class AZDPlayerCharacterBase* Character) override;
+	virtual bool Equip(class APlayerCharacter* Character) override;
+	virtual bool UnEquip(class APlayerCharacter* Character) override;
 
 	///**The skeletal mesh for this gear*/
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gear")

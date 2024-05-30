@@ -122,9 +122,9 @@ public:
 	virtual bool ShouldShowInInventory() const;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnUse(class AZDPlayerCharacterBase* Character);
+	void OnUse(class APlayerCharacter* Character);
 
-	virtual void Use(class AZDPlayerCharacterBase* Character);
+	virtual void Use(class APlayerCharacter* Character);
 	virtual void AddedToInventory(class UInventoryComponent* Inventory);
 
 	UFUNCTION()

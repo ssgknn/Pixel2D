@@ -40,13 +40,13 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	virtual void Use(class AZDPlayerCharacterBase* Character) override;
+	virtual void Use(class APlayerCharacter* Character) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Equippables")
-	virtual bool Equip(class AZDPlayerCharacterBase* Character);
+	virtual bool Equip(class APlayerCharacter* Character);
 
 	UFUNCTION(BlueprintCallable, Category = "Equippables")
-	virtual bool UnEquip(class AZDPlayerCharacterBase* Character);
+	virtual bool UnEquip(class APlayerCharacter* Character);
 
 	virtual bool ShouldShowInInventory() const override;
 	virtual void AddedToInventory(class UInventoryComponent* Inventory) override;

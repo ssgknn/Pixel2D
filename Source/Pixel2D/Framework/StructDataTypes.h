@@ -39,8 +39,8 @@ struct PIXEL2D_API FChunkData
 	UPROPERTY()
 	TArray<uint8> bHasCollision;
 
-	UPROPERTY()
-	class AWorldHandler* WorldHandlerRef;
+	/*UPROPERTY()
+	class AWorldHandler* WorldHandlerRef;*/
 
 	TArray<FPickupData> Pickups;
 

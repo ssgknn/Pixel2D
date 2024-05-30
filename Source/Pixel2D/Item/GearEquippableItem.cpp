@@ -2,7 +2,7 @@
 
 
 #include "GearEquippableItem.h"
-#include "../Player/ZDPlayerCharacterBase.h"
+#include "../Player/PlayerCharacter.h"
 
 
 UGearEquippableItem::UGearEquippableItem()
@@ -10,7 +10,7 @@ UGearEquippableItem::UGearEquippableItem()
 	DamageDefenceMultiplier = 0.0f;
 }
 
-bool UGearEquippableItem::Equip(AZDPlayerCharacterBase* Character)
+bool UGearEquippableItem::Equip(APlayerCharacter* Character)
 {
 	bool bEquipSuccessful = Super::Equip(Character);
 
@@ -22,7 +22,7 @@ bool UGearEquippableItem::Equip(AZDPlayerCharacterBase* Character)
 	return bEquipSuccessful;
 }
 
-bool UGearEquippableItem::UnEquip(AZDPlayerCharacterBase* Character)
+bool UGearEquippableItem::UnEquip(APlayerCharacter* Character)
 {
 	bool bUnEquipSuccessful = Super::UnEquip(Character);
 
