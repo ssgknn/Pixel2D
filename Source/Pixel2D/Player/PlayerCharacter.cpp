@@ -74,6 +74,8 @@ void APlayerCharacter::BeginPlay()
 
 	Super::BeginPlay();
 
+	SetActorTickEnabled(false);
+
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -249,6 +251,11 @@ void APlayerCharacter::DEBUG_Key()
 			UE_LOG(LogTemp, Log, TEXT("ChunkActor Found: %s"), *ChunkActor->GetName());
 		}
 	}
+}
+
+void APlayerCharacter::EnableTick()
+{
+	SetActorTickEnabled(true);
 }
 
 void APlayerCharacter::OnLootSourceOwnerDestroyed(AActor* DestroyedActor)

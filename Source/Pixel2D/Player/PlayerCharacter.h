@@ -47,6 +47,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DEBUG_Key();
 
+	UFUNCTION(BlueprintCallable)
+	void EnableTick();
 
 	// Items
 	UFUNCTION(BlueprintCallable, Category = "Items")
