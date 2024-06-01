@@ -75,7 +75,11 @@ public:
 	UFUNCTION()
 	void RefreshChunk();
 
-	void RefreshChunkChange();
+	UFUNCTION()
+	void RefreshChunkChange(FChunkChangeData updateData);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RefreshChunkChange(FChunkChangeData updateData);
 
 	UFUNCTION(Server, Reliable)
 	void Server_RefreshChunk();

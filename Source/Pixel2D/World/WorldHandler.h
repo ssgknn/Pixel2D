@@ -22,7 +22,8 @@ public:
 	UPROPERTY()
 	TMap<FIntPoint, FChunkData> WorldData;
 
-	UPROPERTY(ReplicatedUsing = OnRep_RegionDataChanged)
+	//UPROPERTY(ReplicatedUsing = OnRep_RegionDataChanged)
+	UPROPERTY()
 	TArray<FChunkChangeData> ChunkDataChange;
 	
 	// Chunk properties
@@ -113,8 +114,8 @@ public:
 	/*UFUNCTION(Server, Reliable)
 	void Server_UpdateRegionData(const TArray<FChunkChangeData>& chunksToUpdate);*/
 
-	UFUNCTION()
-	void OnRep_RegionDataChanged();
+	/*UFUNCTION()
+	void OnRep_RegionDataChanged();*/
 
 	//UFUNCTION(Client, Reliable)
 	//void Client_UpdateWorldData(TArray<FChunkData> chunksToUpdate);

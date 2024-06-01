@@ -58,7 +58,7 @@ void AWorldHandler::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AWorldHandler, ChunkDataChange);
+	//DOREPLIFETIME(AWorldHandler, ChunkDataChange);
 }
 
 void AWorldHandler::Server_RegisterPlayerID_Implementation(APlayerCharacter* playerToRegister)
@@ -162,7 +162,7 @@ void AWorldHandler::LoadChunks(uint8 playerID, FIntPoint newChenterChunk)
 						//SpawnedActor->WorldHandlerRef = this;
 						SpawnedActor->WorldHandlerRef = this;
 						SpawnedActor->SetFChunkData(*FoundChunkData);
-						SpawnedActor->LoadChunk();
+						//SpawnedActor->LoadChunk();
 
 						if (FoundChunkData->Pickups.Num())
 						{
@@ -277,44 +277,74 @@ void AWorldHandler::UpdateRegionData(TArray<FChunkChangeData> chunksToUpdate)
 
 				if (IsChunkExists(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y))
 				{
-					ChunkActors[coord]->SetFChunkData(*ChunkToUpdate);
-					ChunkActors[coord]->RefreshChunk();
+					ChunkActors[coord]->RefreshChunkChange(chunksToUpdate[idx]);
+					
 				}
 			}
 		}
 	}
 }
 
-void AWorldHandler::OnRep_RegionDataChanged()
-{
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_RegionDataChanged called"));
-	if (ChunkDataChange.Num() > 0)
-	{
-		for (int32 idx = 0; idx < ChunkDataChange.Num(); idx++)
-		{
-			FIntPoint coord = ChunkDataChange[idx].ChunkCoordinate;
+//void AWorldHandler::UpdateRegionData(TArray<FChunkChangeData> chunksToUpdate)
+//{
+//	if (GetLocalRole() == ROLE_Authority)
+//	{
+//		if (chunksToUpdate.Num() > 0)
+//		{
+//			for (int32 idx = 0; idx < chunksToUpdate.Num(); idx++)
+//			{
+//				ChunkDataChange = chunksToUpdate;
+//				FIntPoint coord = chunksToUpdate[idx].ChunkCoordinate;
+//
+//				//FChunkData& ChunkToUpdate = RegionData[FindChunkIndexByCoordinate(chunksToUpdate[idx].ChunkCoordinate)];
+//				FChunkData* ChunkToUpdate = WorldData.Find(coord);
+//
+//				for (int32 blockID = 0; blockID < chunksToUpdate[idx].BlockIdx.Num(); blockID++)
+//				{
+//					ChunkToUpdate->BlockTextureID[chunksToUpdate[idx].BlockIdx[blockID]] = chunksToUpdate[idx].BlockTextureID[blockID];
+//					ChunkToUpdate->bHasCollision[chunksToUpdate[idx].BlockIdx[blockID]] = chunksToUpdate[idx].bHasCollision[blockID];
+//				}
+//
+//				if (IsChunkExists(chunksToUpdate[idx].ChunkCoordinate.X, chunksToUpdate[idx].ChunkCoordinate.Y))
+//				{
+//					ChunkActors[coord]->SetFChunkData(*ChunkToUpdate);
+//					ChunkActors[coord]->RefreshChunk();
+//				}
+//			}
+//		}
+//	}
+//}
 
-
-			FChunkData* ChunkToUpdate = WorldData.Find(coord);
-
-			//FChunkData& ChunkToUpdate = RegionData[FindChunkIndexByCoordinate(ChunkDataChange[idx].ChunkCoordinate)];
-			for (int32 blockID = 0; blockID < ChunkDataChange[idx].BlockIdx.Num(); blockID++)
-			{
-				ChunkToUpdate->BlockTextureID[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].BlockTextureID[blockID];
-				ChunkToUpdate->bHasCollision[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].bHasCollision[blockID];
-			}
-
-			if (IsChunkExists(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y))
-			{
-				FIntPoint coords = FIntPoint(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y);
-				AChunkActor* Chunk = *ChunkActors.Find(coord);
-					
-				Chunk->SetFChunkData(*ChunkToUpdate);
-				Chunk->RefreshChunk();
-			}
-		}
-	}
-}
+//void AWorldHandler::OnRep_RegionDataChanged()
+//{
+//	UE_LOG(LogTemp, Warning, TEXT("OnRep_RegionDataChanged called"));
+//	if (ChunkDataChange.Num() > 0)
+//	{
+//		for (int32 idx = 0; idx < ChunkDataChange.Num(); idx++)
+//		{
+//			FIntPoint coord = ChunkDataChange[idx].ChunkCoordinate;
+//
+//
+//			FChunkData* ChunkToUpdate = WorldData.Find(coord);
+//
+//			//FChunkData& ChunkToUpdate = RegionData[FindChunkIndexByCoordinate(ChunkDataChange[idx].ChunkCoordinate)];
+//			for (int32 blockID = 0; blockID < ChunkDataChange[idx].BlockIdx.Num(); blockID++)
+//			{
+//				ChunkToUpdate->BlockTextureID[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].BlockTextureID[blockID];
+//				ChunkToUpdate->bHasCollision[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].bHasCollision[blockID];
+//			}
+//
+//			if (IsChunkExists(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y))
+//			{
+//				FIntPoint coords = FIntPoint(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y);
+//				AChunkActor* Chunk = *ChunkActors.Find(coord);
+//					
+//				Chunk->SetFChunkData(*ChunkToUpdate);
+//				Chunk->RefreshChunk();
+//			}
+//		}
+//	}
+//}
 
 /*OnRep_RegionDataChanged() !!!!*/ 
 //void AWorldHandler::OnRep_RegionDataChanged()

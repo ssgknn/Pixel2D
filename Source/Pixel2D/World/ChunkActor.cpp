@@ -56,6 +56,7 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 void AChunkActor::BeginPlay()
 {
 	Super::BeginPlay();
+	LoadChunk();
 }
 
 void AChunkActor::Tick(float DeltaTime)
@@ -132,14 +133,44 @@ void AChunkActor::RefreshChunk()
 	RefreshCollisionV3(blockSize, chunkElementCount);
 }
 
-void AChunkActor::RefreshChunkChange()
-{
-
-}
-
 void AChunkActor::Server_RefreshChunk_Implementation()
 {
 	RefreshChunk();
+}
+
+void AChunkActor::RefreshChunkChange(FChunkChangeData updateData)
+{
+	if (HasAuthority())
+	{
+		/*FChunkData* ChunkToUpdate = &ChunkData;
+
+		for (int32 blockID = 0; blockID < updateData.BlockIdx.Num(); blockID++)
+		{
+			ChunkToUpdate->BlockTextureID[updateData.BlockIdx[blockID]] = updateData.BlockTextureID[blockID];
+			ChunkToUpdate->bHasCollision[updateData.BlockIdx[blockID]] = updateData.bHasCollision[blockID];
+		}
+
+		RefreshChunk();*/
+
+		// Update the ChunkData
+		for (int32 blockID = 0; blockID < updateData.BlockIdx.Num(); blockID++)
+		{
+			ChunkData.BlockTextureID[updateData.BlockIdx[blockID]] = updateData.BlockTextureID[blockID];
+			ChunkData.bHasCollision[updateData.BlockIdx[blockID]] = updateData.bHasCollision[blockID];
+		}
+
+		// Call your refresh function
+		RefreshChunk();
+	}
+	else
+	{
+		Server_RefreshChunkChange(updateData);
+	}
+}
+
+void AChunkActor::Server_RefreshChunkChange_Implementation(FChunkChangeData updateData)
+{
+	RefreshChunkChange(updateData);
 }
 
 void AChunkActor::RefreshCollision(int32 blockSize, int32 chunkElementCount)
