@@ -13,6 +13,8 @@ class APixel2DGameMode : public AGameModeBase
 
 public:
 	APixel2DGameMode();
+
+
 };
 
 

@@ -27,6 +27,7 @@
 APlayerCharacter::APlayerCharacter()
 {
 	bReplicates = true;
+	PrimaryActorTick.bCanEverTick = true;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -73,8 +74,6 @@ void APlayerCharacter::BeginPlay()
 {
 
 	Super::BeginPlay();
-
-	SetActorTickEnabled(false);
 
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -129,6 +128,11 @@ void APlayerCharacter::BeginPlay()
 	PlayerMaterials.Add(EEquippableSlot::EIS_Backpack, MI_BackPack);
 
 	GetCharacterMovement()->MaxWalkSpeed = 400.0;
+
+	while (WorldHandlerRef == nullptr)
+	{
+		InitializeChunkVariables();
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -164,8 +168,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 	
 	/*float velocity = GetCharacterMovement()->Velocity.Z;
 	GEngine->AddOnScreenDebugMessage(-1, 0.3f, FColor::Red, FString::Printf(TEXT("Velocity: %f"), velocity));*/
-	
-
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -338,9 +340,9 @@ void APlayerCharacter::OnRep_EquippedWeapon()
 //}
 
 
-void APlayerCharacter::InitializeChunkVariables(AWorldHandler* worldHandler)
+void APlayerCharacter::InitializeChunkVariables()
 {
-	/*for (TActorIterator<AWorldHandler> It(GetWorld()); It; ++It)
+	for (TActorIterator<AWorldHandler> It(GetWorld()); It; ++It)
 	{
 		AWorldHandler* FoundHandler = *It;
 		if (FoundHandler)
@@ -348,13 +350,15 @@ void APlayerCharacter::InitializeChunkVariables(AWorldHandler* worldHandler)
 			WorldHandlerRef = FoundHandler;
 			break;
 		}
-	}*/
+	}
 
-	WorldHandlerRef = worldHandler;
-	ChunkSize_player = WorldHandlerRef->ChunkSize;
-	ChunkSizeHalf_player = WorldHandlerRef->ChunkSizeHalf;
+	if (WorldHandlerRef)
+	{
+		ChunkSize_player = WorldHandlerRef->ChunkSize;
+		ChunkSizeHalf_player = WorldHandlerRef->ChunkSizeHalf;
 
-	WorldHandlerRef->Server_RegisterPlayerID(this);
+		WorldHandlerRef->Server_RegisterPlayerID(this);
+	}
 }
 
 void APlayerCharacter::SetPlayerID(uint8 ID)

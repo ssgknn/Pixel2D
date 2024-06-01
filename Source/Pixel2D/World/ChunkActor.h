@@ -42,19 +42,18 @@ public:
 	FChunkData ChunkData;
 
 private:
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	class AWorldHandler* WorldHandlerRef;
 
 	UPROPERTY()
 	USceneComponent* AttachComponent;
 
-	UPROPERTY(VisibleAnywhere)
-	class UBoxComponent* CollisionBoxComponent;
+	
 
-	UPROPERTY(EditAnywhere, Category = "Componens")
+	UPROPERTY(Replicated)
 	class UPaperTileMapComponent* TileMapComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(Replicated)
 	class UProceduralMeshComponent* ProceduralTerrainCollisionMesh;
 
 	
@@ -75,6 +74,8 @@ public:
 
 	UFUNCTION()
 	void RefreshChunk();
+
+	void RefreshChunkChange();
 
 	UFUNCTION(Server, Reliable)
 	void Server_RefreshChunk();

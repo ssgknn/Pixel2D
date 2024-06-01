@@ -14,7 +14,7 @@ class PIXEL2D_API APixel2DPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
-
+public:
 
 
 #pragma region Input

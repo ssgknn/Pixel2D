@@ -9,7 +9,7 @@
 #include "Components/BoxComponent.h"
 #include "ProceduralMeshComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "PaperTileLayer.h"
+#include "PaperTileLayer.h" 
 
 #include "WorldHandler.h"
 #include "../../../../../Program Files/Epic Games/UE_5.1/Engine/Plugins/Runtime/ProceduralMeshComponent/Source/ProceduralMeshComponent/Public/ProceduralMeshComponent.h"
@@ -33,10 +33,10 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	TextComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextComp"));
 	TextComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
-	CollisionBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
+	/*CollisionBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionBoxComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	CollisionBoxComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	CollisionBoxComponent->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);*/
 	
 	ProceduralTerrainCollisionMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("TerrainCollisionMesh"));
 	ProceduralTerrainCollisionMesh->AttachToComponent(AttachComponent, FAttachmentTransformRules::KeepRelativeTransform);
@@ -68,6 +68,9 @@ void AChunkActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AChunkActor, ChunkData);
+	DOREPLIFETIME(AChunkActor, WorldHandlerRef);
+	DOREPLIFETIME(AChunkActor, TileMapComponent);
+	//DOREPLIFETIME(AChunkActor, ProceduralTerrainCollisionMesh);
 }
 
 void AChunkActor::LoadChunk()
@@ -98,11 +101,10 @@ void AChunkActor::LoadChunk()
 		}
 	}
 
-	CollisionBoxComponent->SetBoxExtent(FVector(WorldHandlerRef->ChunkSize * 0.5f, 20.0f, WorldHandlerRef->ChunkSize * 0.5f));
-	CollisionBoxComponent->SetRelativeLocation(FVector(WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(WorldHandlerRef->ChunkSize) * 0.5f));
+	//CollisionBoxComponent->SetBoxExtent(FVector(WorldHandlerRef->ChunkSize * 0.5f, 20.0f, WorldHandlerRef->ChunkSize * 0.5f));
+	//CollisionBoxComponent->SetRelativeLocation(FVector(WorldHandlerRef->ChunkSize * 0.5f, 10.0f, -(WorldHandlerRef->ChunkSize) * 0.5f));
 
 	RefreshCollisionV3(blockSize, chunkElementCount);
-	
 }
 
 void AChunkActor::RefreshChunk()
@@ -110,7 +112,7 @@ void AChunkActor::RefreshChunk()
 	int32 blockSize = WorldHandlerRef->BlockSize;
 	int32 chunkElementCount = WorldHandlerRef->ChunkElementCount;
 
-	TileMapComponent->CreateNewTileMap(chunkElementCount, chunkElementCount, blockSize, blockSize, 1.0, true);
+	//TileMapComponent->CreateNewTileMap(chunkElementCount, chunkElementCount, blockSize, blockSize, 1.0, true);
 
 	FPaperTileInfo LocalTileInfo;
 	LocalTileInfo.TileSet = TileSet0;
@@ -128,6 +130,11 @@ void AChunkActor::RefreshChunk()
 	}
 
 	RefreshCollisionV3(blockSize, chunkElementCount);
+}
+
+void AChunkActor::RefreshChunkChange()
+{
+
 }
 
 void AChunkActor::Server_RefreshChunk_Implementation()

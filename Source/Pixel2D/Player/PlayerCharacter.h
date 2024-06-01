@@ -247,7 +247,7 @@ public:
 	void SetPlayerID(uint8 ID);
 	
 	UFUNCTION(BlueprintCallable)
-	void InitializeChunkVariables(AWorldHandler* worldHandler);
+	void InitializeChunkVariables();
 
 private:
 	

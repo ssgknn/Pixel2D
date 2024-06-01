@@ -8,6 +8,8 @@
 #include "WorldGenerator.h"
 #include "../Framework/FileHandler.h"
 #include "../Item/Item.h"
+#include "../Framework/PixelGameInstance.h"
+
 
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,8 +17,6 @@
 #include "PaperTileMapComponent.h"
 #include <Kismet/KismetMathLibrary.h>
 
-
-//BranchTest ...
 
 // Sets default values
 AWorldHandler::AWorldHandler()
@@ -34,6 +34,13 @@ void AWorldHandler::BeginPlay()
 
 	//initialize calculated parameters
 	InitializeData();
+
+	if (HasAuthority())
+	{
+		UPixelGameInstance* PixelGameInstance = Cast<UPixelGameInstance>(GetGameInstance());
+		LoadWorldIn(PixelGameInstance->WorldName);
+	}
+
 
 	/*WorldGen->GenerateWorld(ChunkElementCount);
 	RegionData = WorldGen->WorldData;*/
@@ -79,7 +86,6 @@ void AWorldHandler::InitializeData()
 	ChunkSize = ChunkElementCount * BlockSize;
 	ChunkSizeHalf = ChunkSize / 2;
 	ChunksCount = (RenderRange * 2 + 1) ^ 2;
-
 
 	//Called data  to initialize
 	ChunkActorTemplate = AChunkActor::StaticClass();
@@ -286,32 +292,65 @@ void AWorldHandler::OnRep_RegionDataChanged()
 	{
 		for (int32 idx = 0; idx < ChunkDataChange.Num(); idx++)
 		{
-			if (WorldData.Num() > 0)
+			FIntPoint coord = ChunkDataChange[idx].ChunkCoordinate;
+
+
+			FChunkData* ChunkToUpdate = WorldData.Find(coord);
+
+			//FChunkData& ChunkToUpdate = RegionData[FindChunkIndexByCoordinate(ChunkDataChange[idx].ChunkCoordinate)];
+			for (int32 blockID = 0; blockID < ChunkDataChange[idx].BlockIdx.Num(); blockID++)
 			{
-				FIntPoint coord = ChunkDataChange[idx].ChunkCoordinate;
+				ChunkToUpdate->BlockTextureID[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].BlockTextureID[blockID];
+				ChunkToUpdate->bHasCollision[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].bHasCollision[blockID];
+			}
 
-				//FChunkData& ChunkToUpdate = RegionData[FindChunkIndexByCoordinate(chunksToUpdate[idx].ChunkCoordinate)];
-				FChunkData* ChunkToUpdate = WorldData.Find(coord);
-
-				//FChunkData& ChunkToUpdate = RegionData[FindChunkIndexByCoordinate(ChunkDataChange[idx].ChunkCoordinate)];
-				for (int32 blockID = 0; blockID < ChunkDataChange[idx].BlockIdx.Num(); blockID++)
-				{
-					ChunkToUpdate->BlockTextureID[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].BlockTextureID[blockID];
-					ChunkToUpdate->bHasCollision[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].bHasCollision[blockID];
-				}
-
-				if (IsChunkExists(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y))
-				{
-					FIntPoint coords = FIntPoint(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y);
-					AChunkActor* Chunk = *ChunkActors.Find(coord);
+			if (IsChunkExists(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y))
+			{
+				FIntPoint coords = FIntPoint(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y);
+				AChunkActor* Chunk = *ChunkActors.Find(coord);
 					
-					Chunk->SetFChunkData(*ChunkToUpdate);
-					Chunk->RefreshChunk();
-				}
+				Chunk->SetFChunkData(*ChunkToUpdate);
+				Chunk->RefreshChunk();
 			}
 		}
 	}
 }
+
+/*OnRep_RegionDataChanged() !!!!*/ 
+//void AWorldHandler::OnRep_RegionDataChanged()
+//{
+//	UE_LOG(LogTemp, Warning, TEXT("OnRep_RegionDataChanged called"));
+//	if (ChunkDataChange.Num() > 0)
+//	{
+//		for (int32 idx = 0; idx < ChunkDataChange.Num(); idx++)
+//		{
+//			if (WorldData.Num() > 0)
+//			{
+//				FIntPoint coord = ChunkDataChange[idx].ChunkCoordinate;
+//
+//				//FChunkData& ChunkToUpdate = RegionData[FindChunkIndexByCoordinate(chunksToUpdate[idx].ChunkCoordinate)];
+//				FChunkData* ChunkToUpdate = WorldData.Find(coord);
+//
+//				//FChunkData& ChunkToUpdate = RegionData[FindChunkIndexByCoordinate(ChunkDataChange[idx].ChunkCoordinate)];
+//				for (int32 blockID = 0; blockID < ChunkDataChange[idx].BlockIdx.Num(); blockID++)
+//				{
+//					ChunkToUpdate->BlockTextureID[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].BlockTextureID[blockID];
+//					ChunkToUpdate->bHasCollision[ChunkDataChange[idx].BlockIdx[blockID]] = ChunkDataChange[idx].bHasCollision[blockID];
+//				}
+//
+//				if (IsChunkExists(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y))
+//				{
+//					FIntPoint coords = FIntPoint(ChunkDataChange[idx].ChunkCoordinate.X, ChunkDataChange[idx].ChunkCoordinate.Y);
+//					AChunkActor* Chunk = *ChunkActors.Find(coord);
+//
+//					Chunk->SetFChunkData(*ChunkToUpdate);
+//					Chunk->RefreshChunk();
+//				}
+//			}
+//		}
+//	}
+//}
+
 
 
 //void AWorldHandler::Client_UpdateWorldData_Implementation(TArray<FChunkData> chunksToUpdate)
