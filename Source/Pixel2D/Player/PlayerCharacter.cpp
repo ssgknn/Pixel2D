@@ -255,11 +255,6 @@ void APlayerCharacter::DEBUG_Key()
 	}
 }
 
-void APlayerCharacter::EnableTick()
-{
-	SetActorTickEnabled(true);
-}
-
 void APlayerCharacter::OnLootSourceOwnerDestroyed(AActor* DestroyedActor)
 {
 	//Remove loot source 
@@ -492,7 +487,6 @@ void APlayerCharacter::CalculateChunkModification(FPlacementData placementData)
 		GEngine->AddOnScreenDebugMessage(-1, 100.3f, FColor::Red, FString::Printf(TEXT("remainBlocksZ: %d"), remainBlocksZ)); */
 
 	FChunkChangeData chunkChange;
-
 
 	chunkChange.ChunkCoordinate = chunkCoord;
 
@@ -753,6 +747,23 @@ void APlayerCharacter::ItemAddedToInventory(UItem* Item)
 
 void APlayerCharacter::ItemRemovedFromInventory(UItem* Item)
 {
+}
+
+void APlayerCharacter::SetHeldItem(UItem* Item)
+{
+	if (HasAuthority())
+	{
+		HeldItem = Item;
+	}
+	else
+	{
+		Server_SetHeldItem(Item);
+	}
+}
+
+void APlayerCharacter::Server_SetHeldItem_Implementation(UItem* Item)
+{
+	SetHeldItem(Item);
 }
 
 bool APlayerCharacter::EquipItem(UEquippableItem* Item)

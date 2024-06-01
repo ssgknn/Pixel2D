@@ -18,6 +18,9 @@ class PIXEL2D_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+
+#pragma region Basic
+
 public:
 	APlayerCharacter();
 
@@ -30,26 +33,73 @@ protected:
 
 	virtual void BeginPlay();
 
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
 
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
 
-	/** Called for Clicking input */
-	void PrimaryClick(const FInputActionValue& Value);
+#pragma endregion Basic
 
-	/** Called for Inventory open/close input */
-	void InventoryOpenClose(const FInputActionValue& Value);
+
+#pragma region Components
+public:
+	/** Camera boom positioning the camera behind the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class USpringArmComponent* CameraBoom;
+
+	/** Follow camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* FollowCamera;
+
+	/** A capsule to detect pickups*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	class UCapsuleComponent* PickupCapsuleComponent;
+
+	/** Our players inventory*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	class UInventoryComponent* PlayerInventory;
+
+	/** Our players inventory*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	class USkeletalMeshComponent* PlayerMesh;
+
+	//The players body meshes.
+	UPROPERTY(BlueprintReadOnly, Category = Mesh)
+	TMap<EEquippableSlot, UMaterialInstanceDynamic*> PlayerMaterials;
+
+	UPROPERTY(BlueprintReadOnly, Category = Mesh)
+	TMap<EEquippableSlot, UMaterialInstance*> PlayerDefaultMaterials;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_Body;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_HeadGear;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_Hair;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_BodyGear;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_LegGear;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_FootGear;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_Emote;
+
+	UPROPERTY()
+	UMaterialInstanceDynamic* MI_BackPack;
+
+#pragma endregion Components
+
 
 public:
 
 	UFUNCTION(BlueprintCallable)
 	void DEBUG_Key();
 
-	UFUNCTION(BlueprintCallable)
-	void EnableTick();
-
+#pragma region InventoryAndItem
 	// Items
 	UFUNCTION(BlueprintCallable, Category = "Items")
 	void UseItem(class UItem* Item);
@@ -77,6 +127,12 @@ public:
 	UFUNCTION()
 	void ItemRemovedFromInventory(class UItem* Item);
 
+	UFUNCTION(BlueprintCallable)
+	void SetHeldItem(UItem* Item);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetHeldItem(UItem* Item);
+
 	/**Handle equipping an equippable item*/
 	bool EquipItem(class UEquippableItem* Item);
 	bool UnEquipItem(class UEquippableItem* Item);
@@ -86,15 +142,6 @@ public:
 	void UnEquipGear(const EEquippableSlot Slot);
 	void EquipWeapon(class UWeaponItem* WeaponItem);
 	void UnEquipWeapon();
-
-	//Modify the players health by either a negative or positive amount. Return the amount of health actually removed
-	float ModifyHealth(const float Delta);
-
-	UFUNCTION()
-	void OnRep_Health(float OldHealth);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnHealthModified(const float HealthDelta);
 
 	UFUNCTION(BlueprintCallable)
 	void SetLootSource(class UInventoryComponent* NewLootSource);
@@ -138,75 +185,37 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_LootSource, BlueprintReadOnly)
 	UInventoryComponent* LootSource;
 
+	//Allows for efficient access of equipped items
+	UPROPERTY(VisibleAnywhere, Category = "Items")
+	TMap<EEquippableSlot, UEquippableItem*> EquippedItems;
+
+	UPROPERTY()
+	UItem* HeldItem;
+
+	/*UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_EquippedWeapon)
+	class AWeapon* EquippedWeapon;*/
+
 	UFUNCTION()
 	void OnLootSourceOwnerDestroyed(AActor* DestroyedActor);
 
 	UFUNCTION()
 	void OnRep_LootSource();
-	
-
-	UFUNCTION()
-	void OnRep_CharacterRotation();
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 
-	UFUNCTION(Server, unreliable)
-	void Server_SetCharacterRotation(uint8 NewRotation);
+#pragma endregion InventoryAndItem
 
-public:
-	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
+#pragma region Stats
+	//Modify the players health by either a negative or positive amount. Return the amount of health actually removed
+	float ModifyHealth(const float Delta);
 
-	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FollowCamera;
+	UFUNCTION()
+	void OnRep_Health(float OldHealth);
 
-	/** A capsule to detect pickups*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
-	class UCapsuleComponent* PickupCapsuleComponent;
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnHealthModified(const float HealthDelta);
 
-	/** Our players inventory*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
-	class UInventoryComponent* PlayerInventory;
-
-	/** Our players inventory*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
-	class USkeletalMeshComponent* PlayerMesh;
-
-	//The players body meshes.
-	UPROPERTY(BlueprintReadOnly, Category = Mesh)
-	TMap<EEquippableSlot, UMaterialInstanceDynamic*> PlayerMaterials;
-
-	UPROPERTY(BlueprintReadOnly, Category = Mesh)
-	TMap<EEquippableSlot, UMaterialInstance*> PlayerDefaultMaterials;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* MI_Body;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* MI_HeadGear;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* MI_Hair;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* MI_BodyGear;
-	
-	UPROPERTY()
-	UMaterialInstanceDynamic* MI_LegGear;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* MI_FootGear;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* MI_Emote;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* MI_BackPack;
-
-	
 protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadOnly, Category = "Health")
@@ -214,20 +223,25 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 	float MaxHealth;
+	
+#pragma endregion Stats
 
-	//Allows for efficient access of equipped items
-	UPROPERTY(VisibleAnywhere, Category = "Items")
-	TMap<EEquippableSlot, UEquippableItem*> EquippedItems;
+protected:
+	
 
-	/*UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_EquippedWeapon)
-	class AWeapon* EquippedWeapon;*/
+	UFUNCTION()
+	void OnRep_CharacterRotation();
+
+	UFUNCTION(Server, unreliable)
+	void Server_SetCharacterRotation(uint8 NewRotation);
 
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterRotation)
 	uint8 CharacterRotation;
 
 	//void PrintMousePositionToWorld();
-	
-// ** Chunk **
+
+
+#pragma region Chunk_related
 public:
 
 	UFUNCTION(Server, Reliable)
@@ -264,9 +278,24 @@ private:
 	int32 ChunkSize_player;
 	int32 ChunkSizeHalf_player;
 
-#pragma region Input
-private:
+#pragma endregion Chunk_related
 
+
+#pragma region Input
+protected:
+	/** Called for movement input */
+	void Move(const FInputActionValue& Value);
+
+	/** Called for looking input */
+	void Look(const FInputActionValue& Value);
+
+	/** Called for Clicking input */
+	void PrimaryClick(const FInputActionValue& Value);
+
+	/** Called for Inventory open/close input */
+	void InventoryOpenClose(const FInputActionValue& Value);
+
+private:
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
@@ -290,6 +319,7 @@ private:
 #pragma endregion Input
 
 #pragma region PlayerController
+
 
 public:
 

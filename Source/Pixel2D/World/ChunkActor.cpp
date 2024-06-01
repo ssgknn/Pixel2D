@@ -44,7 +44,7 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 	ProceduralTerrainCollisionMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	ProceduralTerrainCollisionMesh->SetVisibility(false);
 	ProceduralTerrainCollisionMesh->bUseComplexAsSimpleCollision = true;
-	ProceduralTerrainCollisionMesh->bEnableAutoLODGeneration = false;
+	//ProceduralTerrainCollisionMesh->bEnableAutoLODGeneration = false;
 
 
 	// Initialize TileSets

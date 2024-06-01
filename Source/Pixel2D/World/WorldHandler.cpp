@@ -41,7 +41,6 @@ void AWorldHandler::BeginPlay()
 		LoadWorldIn(PixelGameInstance->WorldName);
 	}
 
-
 	/*WorldGen->GenerateWorld(ChunkElementCount);
 	RegionData = WorldGen->WorldData;*/
 
@@ -63,15 +62,22 @@ void AWorldHandler::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void AWorldHandler::Server_RegisterPlayerID_Implementation(APlayerCharacter* playerToRegister)
 {
-	if (PlayerIDs.Contains(playerToRegister))
+	if (HasAuthority())
 	{
-		return;
-	}
-	else
-	{
-		PlayerIDs.Add(playerToRegister, currentPlayerID);
-		playerToRegister->SetPlayerID(currentPlayerID);
-		currentPlayerID++;
+		if (PlayerIDs.Contains(playerToRegister))
+		{
+			return;
+		}
+		else
+		{
+			int32 playerIndex = ChunkCoordinatesShouldBeActiveByPlayers.Num();
+			TArray<FIntPoint> NewPlayerValues;
+			TPair<uint8, TArray<FIntPoint>> newEmpty(playerIndex, NewPlayerValues);
+			ChunkCoordinatesShouldBeActiveByPlayers.Add(newEmpty);
+
+			PlayerIDs.Add(playerToRegister, playerIndex);
+			playerToRegister->SetPlayerID(playerIndex);
+		}
 	}
 }
 
@@ -113,21 +119,12 @@ void AWorldHandler::LoadChunks(uint8 playerID, FIntPoint newChenterChunk)
 			if (ChunkCoordinatesShouldBeActiveByPlayers[i].Key == playerID)
 			{
 				playerIndex = i;
+
+				// Clear the existing array but keep the pair
+				ChunkCoordinatesShouldBeActiveByPlayers[playerIndex].Value.Empty();
+
 				break;
 			}
-		}
-
-		if (playerIndex < 0)
-		{
-			playerIndex = ChunkCoordinatesShouldBeActiveByPlayers.Num();
-			TArray<FIntPoint> NewPlayerValues;
-			TPair<uint8, TArray<FIntPoint>> newEmpty(playerID, NewPlayerValues);
-			ChunkCoordinatesShouldBeActiveByPlayers.Add(newEmpty);
-		}
-		else
-		{
-			// Clear the existing array but keep the pair
-			ChunkCoordinatesShouldBeActiveByPlayers[playerIndex].Value.Empty();
 		}
 
 		for (int32 IndexX = -RenderRange; IndexX <= RenderRange; IndexX++)

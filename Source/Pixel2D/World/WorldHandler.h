@@ -65,8 +65,6 @@ public:
 	UPROPERTY()
 	TMap<class APlayerCharacter*, uint8> PlayerIDs;
 
-	uint8 currentPlayerID = 0;
-
 #pragma endregion DataVariables
 
 

@@ -28,6 +28,11 @@
 			"Name": "PaperZD",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/c4b43502026047d89296cd7bffd92828"
+		},
+		{
+			"Name": "SmoothSyncPlugin",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/c8f61b007fb44f4abcb7b0974cebff6b"
 		}
 	]
 }
