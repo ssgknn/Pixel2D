@@ -20,7 +20,6 @@ AChunkActor::AChunkActor(const FObjectInitializer& ObjectInitializer) :
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-
 	//NetCullDistanceSquared = 1000;
 
 	AttachComponent = CreateDefaultSubobject<USceneComponent>(TEXT("AttachComponent"));
